@@ -34,6 +34,12 @@ cli
 	lidt [idtr]
 	mov bx,	1
 	lmsw bx
+
+	jmp short $+2
+	xor ax, ax
+	mov ds, ax
+	mov es, ax
+	mov ss, ax
 sti
 ;	INT 0
 	mov bx,0
