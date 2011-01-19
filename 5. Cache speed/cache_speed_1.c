@@ -24,5 +24,7 @@ int main() {
 
         fprintf(result, "2: %.3f\n", (float)(clock() - start) / CLOCKS_PER_SEC);
 
+	fclose(result);
+
 	return 0;
 }
