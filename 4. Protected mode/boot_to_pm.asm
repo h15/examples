@@ -70,8 +70,7 @@ print:
 	
 	rep movsb
 	
-	cli
-	hlt
+	ret
 
 text	dw	5
 	dw 0149h, 024eh, 0454h, 010dh, 010ah ; 'INT'
