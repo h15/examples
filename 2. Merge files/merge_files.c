@@ -77,13 +77,11 @@ int __main(int argc, char *argv[]) {
 	FILE *fh;
 
 	// Из файлов в друмерный массив
-	for ( i = 1; i <= argc; ++i ) {
+	for ( i = 1; i < argc; ++i ) {
 		count = 0;
-	if ( errno != 0 ) {
-		printf("errno: %i\n", errno);
-		ERR = 211;
-		return 1;
-	}
+
+	//	printf("%s", argv[i]);
+	
 		if ( ( fh = fopen(argv[i], "r") ) != NULL ) {
 			// Считаем количество чисел в файле
 			while( fscanf( fh, "%u", &tmp ) != EOF )
@@ -107,9 +105,25 @@ int __main(int argc, char *argv[]) {
 				array[i][j++] = tmp;
 
 			fclose(fh);
-// some thing will broke here
 		}
+		// Не смог? - Освободи всё, что брал.
+		else {
+                        printf("errno: %i\n", errno);
+                        ERR = 2;
+
+                        for ( j = 0; j < i; ++j ) {
+                                free( array[j] );
+                                array[j] = NULL;
+                        }
+
+                        free(array);
+                        array = NULL;
+
+                        return 1;
+                }
+		
 		glob_count += count;
+
 	}
 	
 	unsigned *ary = malloc( glob_count * sizeof(unsigned) );
