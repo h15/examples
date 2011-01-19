@@ -1,9 +1,12 @@
+/*
+ *	GCC file
+ */
 #include <stdio.h>
 #include <time.h>
 #define N 1500
 
 int main() {
-	FILE *result = fopen("result.txt", "w");
+	FILE *result = fopen("result_1.txt", "w");
 	int a[N][N];
 	int i, j, devnull;
 
