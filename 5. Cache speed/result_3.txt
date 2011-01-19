@@ -1,0 +1,2 @@
+Different:	50
+Constant:	66
