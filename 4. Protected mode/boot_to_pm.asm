@@ -32,14 +32,17 @@ protected_mode:
 cli
 	lgdt [gdtr]
 	lidt [idtr]
-	mov bx,	1
-	lmsw bx
 
-	jmp short $+2
+	mov eax, cr0
+	or al, 1
+	mov cr0, eax
+
 	xor ax, ax
 	mov ds, ax
 	mov es, ax
 	mov ss, ax
+	
+	jmp 8:$+3
 sti
 ;	INT 0
 	mov bx,0
