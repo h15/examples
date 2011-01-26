@@ -37,12 +37,12 @@ cli
 	or al, 1
 	mov cr0, eax
 
+	jmp 8:$+3
 	xor ax, ax
 	mov ds, ax
 	mov es, ax
 	mov ss, ax
 	
-	jmp 8:$+3
 sti
 ;	INT 0
 	mov bx,0
