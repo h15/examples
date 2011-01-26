@@ -29,11 +29,10 @@ echo "Different:	$SECONDS" > result_3.txt
 #
 ./2.\ Threads\ and\ counters >> /dev/null &
 pid=$!
-mask=1
 
 while [ -d /proc/$pid ]
 do
-        taskset -p $mask $pid
+        taskset -p 1 $pid
 done
 
 echo "Constant:	$SECONDS" >> result_3.txt

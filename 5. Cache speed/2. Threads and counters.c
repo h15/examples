@@ -9,7 +9,7 @@
 #define BIG_NUM 600000000LL
 
 static void *do_nothing_loop(void *d) {
-	long long * a;
+	volatile long long * a;
 	a = (long long *) d;
 
 	while(*a < BIG_NUM)
