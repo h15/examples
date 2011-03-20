@@ -22,9 +22,13 @@ Using this file, need check: are files changed?
 
 =over
 
-=item -make for make file with files' state.
+=item -make
 
-=item -check for check files' state.
+for make file with files' state.
+
+=item -check
+
+for check files' state.
 
 =back
 
@@ -32,20 +36,25 @@ Using this file, need check: are files changed?
 
 =over
 
-=item hash_file - it's a file, where state's base should consists. Will be created/rewrited on "-make".
+=item hash_file 
 
-=item pathX - path to file or directory, which should be checked.
+it's a file, where state's base should consists. Will be created/rewrited on C<-make>.
+
+=item pathX 
+
+path to file or directory, which should be checked.
 
 =back
 
 =head2 2nd promlem. Change SIGINT handler
 
-Print on SIGINT running pid and gid.
+Print on C<SIGINT> running C<pid> and C<gid>.
 
 Test:
+
 	./who_is_running 1 | ./who_is_running 3 & ./who_is_running 4 | (./who_is_running 7; ./who_is_running 9)
 
-Where param of ./who_is_running is digit.
+Where param of C<./who_is_running> is digit.
 
 =cut
 
