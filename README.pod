@@ -1,0 +1,51 @@
+
+=pod
+
+=head1 First Semister
+
+Promlems for first semister of Operation Systems.
+
+=head1 Second Semester
+
+Promlems for second semister of Operation Systems.
+
+=head2 1st problem. Check files' state: are they changed? on Bash
+
+Make file, where for each pair md5, size of file need write all files which has this params.
+Using this file, need check: are files changed?
+
+=head3 Useage program
+
+	./changed_files.sh {-make|-check} hash_file [path1] [pathN]
+
+=head4 Keys
+
+=over
+
+=item -make for make file with files' state.
+
+=item -check for check files' state.
+
+=back
+
+=head4 Params
+
+=over
+
+=item hash_file - it's a file, where state's base should consists. Will be created/rewrited on "-make".
+
+=item pathX - path to file or directory, which should be checked.
+
+=back
+
+=head2 2nd promlem. Change SIGINT handler
+
+Print on SIGINT running pid and gid.
+
+Test:
+	./who_is_running 1 | ./who_is_running 3 & ./who_is_running 4 | (./who_is_running 7; ./who_is_running 9)
+
+Where param of ./who_is_running is digit.
+
+=cut
+
