@@ -16,7 +16,7 @@ Using this file, need check: are files changed?
 
 =head3 Useage program
 
-	./changed_files.sh {-make|-check} hash_file [path1] [pathN]
+	./changed_files.sh {-make|-check} hash_file [path1 ... pathN]
 
 =head4 Keys
 
@@ -40,9 +40,9 @@ for check files' state.
 
 it's a file, where state's base should consists. Will be created/rewrited on C<-make>.
 
-=item pathX 
+=item pathX
 
-path to file or directory, which should be checked.
+path to file or directory, which should be checked. May be more than one path.
 
 =back
 

@@ -4,17 +4,25 @@
 #   Make actual hash
 #
 function read_fs {
-    for filename in `find "$1" -type f | sort`
+#    SAVE_IFS=IFS
+#    IFS=$n
+    while [ $1 ]
     do
-        filename=`readlink -f "$filename"`
+        for filename in `find "$1" -type f | sort`
+        do
+            filename=`readlink -f $filename`
+    #        echo $filename
+            size=`stat -c "%s" "$filename"`
+            
+            md5=`md5sum "$filename"`
+            md5=${md5:0:32}
+            
+            md5_hash_current["$md5-$size"]+="$filename$n"
+        done
         
-        size=`stat -c "%s" "$filename"`
-        
-        md5=`md5sum "$filename"`
-        md5=${md5:0:32}
-        
-        md5_hash_current["$md5-$size"]+="$filename$n"
+        shift
     done
+#    IFS=SAVE_IFS
 }
 
 #
@@ -64,8 +72,8 @@ function check_hashes {
     isChanged=0
     
     # No white space here!
-    SAVE_IFS=$IFS
-    IFS=$'\n'
+#    SAVE_IFS=$IFS
+#    IFS=$'\n'
 
     for key in ${!md5_hash_file[@]}
     do
@@ -81,7 +89,7 @@ function check_hashes {
         done
     done
     
-    IFS=$SAVE_IFS
+#    IFS=$SAVE_IFS
     
     if [ $isChanged = 0 ]
     then
@@ -107,6 +115,7 @@ declare -A md5_hash_file
 declare -A md5_hash_current
 
 n=$'\n'
+IFS=$'\n'
 
 option=$1
 shift
@@ -126,6 +135,6 @@ case $option in
         echo '[+] Done!'
         ;;
     *)
-        echo $"[!] Usage: $0 {-make|-check} hash_file [path1] [pathN]"
+        echo $"[!] Usage: $0 {-make|-check} hash_file [path1 ... pathN]"
         exit 1
 esac
