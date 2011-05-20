@@ -2,6 +2,8 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/time.h>
 
 int p[2];
 
@@ -22,6 +24,22 @@ int main( int argc, char** argv ) {
     volatile char counter = 0;
     int size = 0;
     
+/*  with select  */
+    static fd_set rset;
+    
+    struct timeval time;
+    time.tv_sec  = 5;
+    time.tv_usec = 0;
+    
+    FD_ZERO (&rset);
+    FD_SET (p[0], &rset);
+    
+    int res = select(p[0]+1, &rset, (fd_set*)0, (fd_set*)0, &time);
+               
+    if ( res == -1 )
+        fprintf( stderr, "\npid: %d;\ngid: %d;\n", getpid(), getgid() );
+    
+/*    
     while( counter < 50 ) {
         usleep(100000);
         ioctl(p[0], FIONREAD, &size);
@@ -33,7 +51,7 @@ int main( int argc, char** argv ) {
         
         ++counter;
     }
-    
+*/
 	sigaction( SIGINT, &old_action, NULL );
 
     close(p[0]);
