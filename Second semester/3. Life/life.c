@@ -36,6 +36,8 @@ static void *life( /*void *d*/ ) {
 	fclose(fh);
 	
 	while( 1 ) {
+	    while( LOCK != 0 );
+	    
 	    LOCK = 1;
 	    // mark
 	    for ( x = 1; x <= size_x; ++x )
@@ -84,7 +86,9 @@ static void *print( /*void *d*/ ) {
     int size, x, y;
     
     while( scanf("%c", &c) ) {
-        while( LOCK == 1 );
+        while( LOCK != 0 );
+        
+        LOCK = 2;
 /*
         for ( x = 1; x <= size_x; ++x ) {
             ioctl( p[0], FIONREAD, &size );
@@ -97,6 +101,7 @@ static void *print( /*void *d*/ ) {
         for ( x = 1; x <= size_x; ++x )
 	        for ( y = 1; y <= size_y; ++y )
 	            printf( "%c", MAP[x][y] );
+	    LOCK = 0;
     }
 }
 
