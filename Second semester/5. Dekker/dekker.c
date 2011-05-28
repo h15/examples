@@ -15,7 +15,7 @@ static void* calc( void* id ) {
     
     volatile int countdown = BIG_NUM;
     
-    while( countdown != 0 ) {
+    while( countdown >= 0 ) {
         flag[self] = true;
         while( flag[other] == true ) {
             if( turn != self ) {
@@ -27,7 +27,7 @@ static void* calc( void* id ) {
         
         // critical section
         
-        if( --countdown != 0 ) ++val;
+        if( --countdown >= 0 ) ++val;
         
         // end
         
