@@ -13,7 +13,7 @@
 #define DEAD  '.'
 #define ALIVE '0'
 #define PORT 12346
-#define MAX_CLIENTS 10
+#define MAX_CLIENTS 5
 
 int size_x, size_y;
 char MAP[X][Y];
@@ -112,7 +112,7 @@ static void *print() {
         exit(0);
     }
           
-    listen(sockfd,5);
+    listen(sockfd,MAX_CLIENTS);
     
     clilen = sizeof(cli_addr);
     
