@@ -9,9 +9,16 @@
 #define DEAD  '.'
 #define ALIVE '0'
 
+#define mb() asm volatile("mfence":::"memory")
+#define true  1
+#define false 0
+
 int size_x, size_y;
 char MAP[X][Y];
 volatile char LOCK = 0;
+
+volatile char flag[2] = { false, false };
+volatile char turn    = 0;
 
 static void *life( /*void *d*/ ) {
     //int *p = (int *) d;
@@ -35,10 +42,22 @@ static void *life( /*void *d*/ ) {
 	
 	fclose(fh);
 	
+	int self  = 0;
+    int other = 1;
+	
 	while( 1 ) {
-	    while( LOCK != 0 );
-	    
-	    LOCK = 1;
+	    // Dekker lock
+	    flag[self] = true;
+        mb();
+        while( flag[other] == true ) {
+            if( turn != self ) {
+                flag[self] = false;
+                while( turn != self );
+                flag[self] = true;
+            }
+        }
+        
+        // Critical section
 	    // mark
 	    for ( x = 1; x <= size_x; ++x )
 	        for ( y = 1; y <= size_y; ++y ) {
@@ -57,24 +76,10 @@ static void *life( /*void *d*/ ) {
 	            if ( MAP[x][y] == 2 ) MAP[x][y] = ALIVE;
 	            if ( MAP[x][y] == 3 ) MAP[x][y] = DEAD;
 	        }
-/*
-	    // Did another thread ask data.
-	    int size;
-	    ioctl( p[2], FIONREAD, &size );
-	    
-	    if ( size > 0 ) {
-	        read( p[2], &str, size ); // flush
-	        
-	        write( p[1], size_x, sizeof(int) );
-	        
-	        for ( x = 1; x <= size_x; ++x ) {
-	            for ( y = 1; y <= size_y; ++y )
-	                str[y-1] = MAP[x][y];
-	            write( p[1], str, size_y );
-	        }
-	    }
-*/
-        LOCK = 0;
+
+        // Dekker unlock
+        turn = other;
+        flag[self] = false;
         
 	    sleep(1);
 	}
@@ -85,23 +90,30 @@ static void *print( /*void *d*/ ) {
     char c;
     int size, x, y;
     
+    int self  = 1;
+    int other = 0;
+    
     while( scanf("%c", &c) ) {
-        while( LOCK != 0 );
-        
-        LOCK = 2;
-/*
-        for ( x = 1; x <= size_x; ++x ) {
-            ioctl( p[0], FIONREAD, &size );
-            
-            read( p[0], &s, size );
-            s[size] = 0;
-            printf( "%s", s );
+	    // Dekker lock
+	    flag[self] = true;
+	    
+        mb();
+        while( flag[other] == true ) {
+            if( turn != self ) {
+                flag[self] = false;
+                while( turn != self );
+                flag[self] = true;
+            }
         }
-*/
+        
+        // Critical section
         for ( x = 1; x <= size_x; ++x )
 	        for ( y = 1; y <= size_y; ++y )
 	            printf( "%c", MAP[x][y] );
-	    LOCK = 0;
+	    
+	    // Dekker unlock
+        turn = other;
+        flag[self] = false;
     }
 }
 
