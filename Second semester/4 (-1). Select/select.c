@@ -34,20 +34,20 @@ int main (int argc, char **argv) {
         
         for ( i = 1; i < argc; ++i )
             if ( FD_ISSET( param[i], &rset ) ) {
-                do {
+                //do {
                     bytes = read( param[i], buf, BUF_SIZE * sizeof(char) );
                     
-                    if ( bytes < 0 ) {
-                        printf( "cann't read file with descriptor %d", param[i] );
-                        return 3;
+                    if ( bytes < 1 ) {
+                        FD_CLR( param[i], &rset );
+                        ++done;
                     }
+                    else 
+                        write( 1, buf, bytes );
                     
-                    write( 1, buf, bytes );
-                    
-                } while ( bytes == BUF_SIZE );
+                //} while ( bytes == BUF_SIZE );
                 
-                FD_CLR( param[i], &rset );
-                ++done;
+                //FD_CLR( param[i], &rset );
+                //++done;
             }
     }
     
