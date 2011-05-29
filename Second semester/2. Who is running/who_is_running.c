@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -8,7 +9,7 @@
 int p[2];
 
 void sigint( int signo ) {
-    write(p[1], "a", 1);
+    write( p[1], &signo, sizeof(signo) );
 }
 
 int main( int argc, char** argv ) {
@@ -19,25 +20,25 @@ int main( int argc, char** argv ) {
     
 	struct sigaction action, old_action;
 	action.sa_handler = sigint;
-	sigaction( SIGINT, &action, &old_action );
+	
+	int signo;
     
-    volatile char counter = 0;
-    int size = 0;
+    for ( signo = 1; signo < 32; ++signo )
+        if ( signo != 9 && signo != 19)
+        	sigaction( signo, &action, NULL );
     
-/*  with select  */
-    static fd_set rset;
-    
-    struct timeval time;
-    time.tv_sec  = 5;
-    time.tv_usec = 0;
-    
-    FD_ZERO (&rset);
-    FD_SET (p[0], &rset);
-    
-    int res = select(p[0]+1, &rset, (fd_set*)0, (fd_set*)0, &time);
-               
-    if ( res == -1 )
-        fprintf( stderr, "\npid: %d;\ngid: %d;\n", getpid(), getgid() );
+    while( 1 ) {
+        int bytes = read(p[0], &signo, sizeof(signo));
+        
+        if ( bytes > 0 ) {
+            fprintf( stderr, "\npid: %d;\ngid: %d;\nsig: %d\n", getpid(), getgid(), signo );
+            
+            if ( signo == SIGINT ) {
+                puts("\nterminated by SIGINT\n");
+                break;
+            }
+        }
+    }
     
 /*    
     while( counter < 50 ) {
@@ -52,7 +53,7 @@ int main( int argc, char** argv ) {
         ++counter;
     }
 */
-	sigaction( SIGINT, &old_action, NULL );
+//	sigaction( SIGINT, &old_action, NULL );
 
     close(p[0]);
     close(p[1]);
