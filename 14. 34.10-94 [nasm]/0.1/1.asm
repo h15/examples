@@ -19,8 +19,8 @@ global _start
 _start:
     mov rsi, a
     mov al, 0x11
-    call longMulRefAlC
-    mov rsi, c
+    call longShl
+    mov rsi, a
     call print512bits
 
 _exit0:
@@ -77,12 +77,12 @@ print512bits:
     push rsi
     
     mov rcx, 63
-    print512bits_loop:
+    .loop:
         inc rsi
         mov al, [rsi]
         call al2buf
         call printBuf
-    loop print512bits_loop
+    loop .loop
     
     pop rsi
     pop rcx
@@ -101,12 +101,12 @@ longAddABC:
     push rsi
     
     mov rcx, 63
-    longAddABC_loop:
+    .loop:
         mov al, [a + rcx]
         mov bl, [b + rcx]
         adc al, bl
         mov [c + rcx], al
-    loop longAddABC_loop
+    loop .loop
     
     pop rsi
     pop rcx
@@ -125,12 +125,12 @@ longSubABC:
     push rsi
     
     mov rcx, 63
-    longSubABC_loop:
+    .loop:
         mov al, [a + rcx]
         mov bl, [b + rcx]
         sbb al, bl
         mov [c + rcx], al
-    loop longSubABC_loop
+    loop .loop
     
     pop rsi
     pop rcx
@@ -151,13 +151,13 @@ longMulABC:
     xor ah, ah
     
     mov rcx, 63
-    longMulABC_loop:
+    .loop:
         mov al, [a + rcx]
         mov bl, [b + rcx]
         mov [c + rcx], ah
         mul bl
         add [c + rcx], al
-    loop longMulABC_loop
+    loop .loop
     
     pop rsi
     pop rcx
@@ -194,6 +194,31 @@ longMulRefAlC:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;;  << [rsi]
+;;
+longShl:
+    push rax
+    push rbx
+    push rcx
+    push rsi
+    
+    xor ah, ah
+    
+    mov rcx, 63
+    .loop:
+        mov al, [rsi + rcx]
+        mov [rsi + rcx], ah
+        mov ah, al
+    loop .loop
+    
+    pop rsi
+    pop rcx
+    pop rbx
+    pop rax
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;;  From reg AL to BUF (byte)
 ;;
 al2buf:
@@ -209,27 +234,31 @@ al2buf:
     and al, 0b0000_1111
     shr dl, 4
     
+    ; if / else
     ; rdx to first byte of buf
     cmp dl, 10
-    jl al2buf_dec1
-    add dl, 'A' - 10
-    jmp al2buf_write1
-al2buf_dec1:
-    add dl, '0'
-al2buf_write1:
+    jl .dec1
+        add dl, 'A' - 10
+        jmp .write1
+    .dec1:
+        add dl, '0'
+    .write1:
+    
     mov [buf], dl
     
+    ; if / else
     ; rax to first byte of buf
     cmp al, 10
-    jl al2buf_dec2
-    add al, 'A' - 10
-    jmp al2buf_write2
-al2buf_dec2:
-    add al, '0'
-al2buf_write2:
+    jl .dec2
+        add al, 'A' - 10
+        jmp .write2
+    .dec2:
+        add al, '0'
+    .write2:
+    
     mov [buf+1], al
 	
-a2b_out:
+.out:
     pop rdx
 	pop rcx
 	pop rbx
