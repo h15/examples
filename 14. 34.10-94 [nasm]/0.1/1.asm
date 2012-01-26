@@ -4,12 +4,13 @@ section .data
     len     equ 129
     buffer  times 128 db 0
             db 0x0A
-    a       db 0x51
-            db 0x32
-            times 62 db 0
-    b       db 0x51
-            db 0x26
-            db 0xA9
+    a       db 0x12
+            db 0x25
+            db 0x00
+            times 61 db 0
+    b       db 0x11
+            db 0x12
+            db 0x00
             times 61 db 0
             
     c       times 64 db 0
@@ -27,9 +28,16 @@ _start:
     ;mov rsi, c
     ;call longFlush
     ;mov al, 0x2
-    ;mov rsi, b
-    call longMul
-    mov rsi, d
+    mov rsi, a
+    mov rdi, b
+    
+    ;call longGreater2
+    ;mov al, dl
+    ;call al2buf
+    ;call printBuf
+    
+    call longMod
+    mov rsi, c
     call print512bits
 
 _exit0:
@@ -132,7 +140,7 @@ longAdd:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  uses a, b, c
-;;  c = rsi + rdi
+;;  c = rsi - rdi
 ;;
 longSub:
     push rax
@@ -305,6 +313,205 @@ longMov:
         mov [rdi + rdx], al
         inc rdx
     loop .loop
+    
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rax
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  c = [rsi] mod [rdi]
+;;
+longMod:
+    push rax
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    
+    xor rdx, rdx
+    
+    .while:
+    
+        call longGreater2
+        cmp rdx, 0
+        jne .if
+        ; rdx == 0
+            mov rdi, c
+            call longMov
+            jmp .endwhile
+        .if:
+        ;cmp rdx, 1
+        ;jne .elsif
+        ; rdx != 0
+            push rdi
+            
+            call longSub
+            
+            mov rdi, rsi,
+            mov rsi, c
+            
+            pop rdi
+            jmp .endif
+        ;.elsif:
+        ; rdx > 1
+        ;    push rdi
+        ;    push rsi
+        ;        
+        ;        call longShr
+        ;    
+        ;    pop rsi
+        ;    pop rdi
+        .endif:
+        
+    jmp .while
+    .endwhile:
+    
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rax
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  How much [rsi] greater than [dsi]
+;;  @return rdx (0|1)
+;;
+longGreater2:
+    push rax
+    push rcx
+    push rsi
+    push rdi
+    
+    xor rdx, rdx
+    
+    mov rcx, 64
+    .loop:
+        mov al, [rsi + rcx - 1]
+        mov ah, [rdi + rcx - 1]
+        
+        cmp al, 0
+        jne .if
+        ; al == 0
+            cmp ah, 0
+            jne .if1
+            ; ah == 0
+                jmp .endif
+            .if1:
+                xor rdx, rdx
+                jmp .endloop
+        
+            jmp .endif
+        .if:
+        ; al != 0
+            cmp ah, 0
+            jne .if2
+            ; ah == 0
+                mov rdx, 1
+                jmp .endloop
+            .if2:
+                cmp al, ah
+                jl .if21
+                    mov rdx, 1
+                    jmp .endloop
+                .if21:
+                    mov rdx, 0
+                    jmp .endloop
+        
+            jmp .endif
+            
+        .endif:
+        
+    loop .loop
+    .endloop:
+    
+    pop rdi
+    pop rsi
+    pop rcx
+    pop rax
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  How much [rsi] greater than [dsi]
+;;  @return rbx
+;;
+longGreater:
+    push rax
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    
+    xor rdx, rdx
+    xor rbx, rbx
+    
+    mov rcx, 64
+    .loop:
+        mov al, [rsi + rdx]
+        mov ah, [rdi + rdx]
+        
+        cmp rdx, 0
+        jne .if
+        ; rdx == 0
+            cmp al, 0
+            jne .if1
+            ; rdx == 0, al == 0
+                cmp ah, 0
+                jne .if12
+                ; rdx == 0, al ==0, ah == 0 -> try again
+                    jmp .endif
+                
+                .if12:
+                ; rdx == 0, al ==0, ah != 0 -> gotcha! return 0
+                    jmp .endloop
+            
+            .if1:
+            ; rdx == 0, al != 0
+                cmp ah, 0
+                jne .if2
+                ; rdx == 0, al != 0, ah == 0 -> rdx++
+                    inc rdx
+                    jmp .endif
+                .if2:
+                ; rdx == 0, al != 0, ah != 0
+                    cmp al, ah
+                    jl .if21
+                    ; rdx == 0, al != 0, ah != 0, al >= ah -> rdx++ and return
+                        inc rdx
+                        jmp .endloop
+                    .if21:
+                    ; rdx == 0, al != 0, ah != 0, al < ah -> return 0
+                        jmp .endloop
+                    
+            jmp .endif ; never reached
+        .if:
+        ; rdx != 0
+            cmp ah, 0
+            jne .if_2
+            ; rdx != 0, ah == 0 -> rdx++
+                inc rdx
+                jmp .endif
+            .if_2:
+            ; rdx != 0, ah != 0
+                cmp al, ah
+                jl .if_21
+                ; rdx != 0, ah != 0, al >= ah -> rdx++ and return
+                    inc rdx
+                    jmp .endloop
+                .if_21:
+                ; rdx != 0, ah != 0, al < ah -> return rdx
+                    jmp .endloop
+            
+        .endif:
+        
+    loop .loop
+    .endloop:
     
     pop rdi
     pop rsi
