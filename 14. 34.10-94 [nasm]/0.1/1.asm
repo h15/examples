@@ -5,9 +5,12 @@ section .data
     buffer  times 128 db 0
             db 0x0A
     a       times 64 db 0x11
-    b       times 63 db 0
+    b       times 63 db 0x0
             db 0x2
+            
     c       times 64 db 0
+    d       times 64 db 0
+    
     buf     db '   '
     buf_start	equ 0
     buf_end		equ 0
@@ -17,10 +20,12 @@ section .text
 global _start
 
 _start:
-    mov rsi, a
-    mov al, 0x11
-    call longShl
-    mov rsi, a
+    ;mov rsi, c
+    ;call longFlush
+    ;mov al, 0x2
+    ;mov rsi, b
+    call longMulABC
+    mov rsi, c
     call print512bits
 
 _exit0:
@@ -57,7 +62,7 @@ printBuf:
     mov eax, 4
     mov ebx, 1
     mov ecx, buf
-    mov edx, 3
+    mov edx, 2
     int 0x80
     
     pop rdx
@@ -76,12 +81,12 @@ print512bits:
     push rcx
     push rsi
     
-    mov rcx, 63
+    mov rcx, 64
     .loop:
-        inc rsi
         mov al, [rsi]
         call al2buf
         call printBuf
+        inc rsi
     loop .loop
     
     pop rsi
@@ -91,24 +96,31 @@ print512bits:
     ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  uses a, b, c
-;;  c = a + b
+;;  uses c
+;;  c = rsi + rdi
 ;;
 longAddABC:
     push rax
     push rbx
     push rcx
+    push rdx
     push rsi
+    push rdi
     
-    mov rcx, 63
+    xor rdx, rdx
+    
+    mov rcx, 64
     .loop:
-        mov al, [a + rcx]
-        mov bl, [b + rcx]
+        mov al, [rsi + rdx]
+        mov bl, [rdi + rdx]
         adc al, bl
-        mov [c + rcx], al
+        mov [c + rdx], al
+        inc rdx
     loop .loop
     
+    pop rdi
     pop rsi
+    pop rdx
     pop rcx
     pop rbx
     pop rax
@@ -122,17 +134,24 @@ longSubABC:
     push rax
     push rbx
     push rcx
+    push rdx
     push rsi
+    push rdi
     
-    mov rcx, 63
+    xor rdx, rdx
+    
+    mov rcx, 64
     .loop:
-        mov al, [a + rcx]
-        mov bl, [b + rcx]
+        mov al, [a + rdx]
+        mov bl, [b + rdx]
         sbb al, bl
-        mov [c + rcx], al
+        mov [c + rdx], al
+        inc rdx
     loop .loop
     
+    pop rdi
     pop rsi
+    pop rdx
     pop rcx
     pop rbx
     pop rax
@@ -148,15 +167,16 @@ longMulABC:
     push rcx
     push rsi
     
-    xor ah, ah
+    xor rbx, rbx
     
-    mov rcx, 63
+    mov rcx, 64
     .loop:
-        mov al, [a + rcx]
-        mov bl, [b + rcx]
-        mov [c + rcx], ah
-        mul bl
-        add [c + rcx], al
+        mov al, [b + rbx]
+        mov rsi, a
+        call longMulRefAlC
+        mov rsi, c
+        call longShr
+        inc rbx
     loop .loop
     
     pop rsi
@@ -173,17 +193,63 @@ longMulRefAlC:
     push rax
     push rbx
     push rcx
+    push rdx
     push rsi
     
     mov bl, al
     xor ah, ah
+    xor rdx, rdx
+    
+    mov rcx, 64
+    .loop:
+        mov al, [rsi + rdx]
+        mov [c + rdx], ah
+        mul bl
+        add [c + rdx], al
+        inc rdx
+    loop .loop
+    
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  [rsi] = 0
+;;
+longFlush:
+    push rcx
     
     mov rcx, 63
     .loop:
-        mov al, [rsi + rcx]
-        mov [c + rcx], ah
-        mul bl
-        add [c + rcx], al
+        mov byte [rsi + rcx], 0
+    loop .loop
+    
+    pop rcx
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  >> [rsi]
+;;
+longShr:
+    push rax
+    push rbx
+    push rcx
+    push rsi
+    
+    xor ah, ah
+    xor rbx, rbx
+    
+    mov rcx, 64
+    .loop:
+        mov al, [rsi + rbx]
+        mov [rsi + rbx], ah
+        mov ah, al
+        inc rbx
     loop .loop
     
     pop rsi
@@ -194,27 +260,25 @@ longMulRefAlC:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  << [rsi]
+;;  [rdi] = [rsi]
 ;;
-longShl:
-    push rax
-    push rbx
+longMov:
     push rcx
+    push rdx
     push rsi
     
-    xor ah, ah
+    xor rdx, rdx
     
-    mov rcx, 63
+    mov rcx, 64
     .loop:
-        mov al, [rsi + rcx]
-        mov [rsi + rcx], ah
-        mov ah, al
+        mov al, [rsi + rdx]
+        mov [rdi + rdx], ah
+        inc rdx
     loop .loop
     
     pop rsi
+    pop rdx
     pop rcx
-    pop rbx
-    pop rax
     ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
