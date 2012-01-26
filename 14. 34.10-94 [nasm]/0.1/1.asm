@@ -4,9 +4,13 @@ section .data
     len     equ 129
     buffer  times 128 db 0
             db 0x0A
-    a       times 64 db 0x11
-    b       times 63 db 0x0
-            db 0x2
+    a       db 0x51
+            db 0x32
+            times 62 db 0
+    b       db 0x51
+            db 0x26
+            db 0xA9
+            times 61 db 0
             
     c       times 64 db 0
     d       times 64 db 0
@@ -24,8 +28,8 @@ _start:
     ;call longFlush
     ;mov al, 0x2
     ;mov rsi, b
-    call longMulABC
-    mov rsi, c
+    call longMul
+    mov rsi, d
     call print512bits
 
 _exit0:
@@ -62,7 +66,7 @@ printBuf:
     mov eax, 4
     mov ebx, 1
     mov ecx, buf
-    mov edx, 2
+    mov edx, 3
     int 0x80
     
     pop rdx
@@ -99,7 +103,7 @@ print512bits:
 ;;  uses c
 ;;  c = rsi + rdi
 ;;
-longAddABC:
+longAdd:
     push rax
     push rbx
     push rcx
@@ -128,9 +132,9 @@ longAddABC:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  uses a, b, c
-;;  c = a - b
+;;  c = rsi + rdi
 ;;
-longSubABC:
+longSub:
     push rax
     push rbx
     push rcx
@@ -142,8 +146,8 @@ longSubABC:
     
     mov rcx, 64
     .loop:
-        mov al, [a + rdx]
-        mov bl, [b + rdx]
+        mov al, [rsi + rdx]
+        mov bl, [rdi + rdx]
         sbb al, bl
         mov [c + rdx], al
         inc rdx
@@ -158,10 +162,10 @@ longSubABC:
     ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  uses a, b, c
+;;  uses a, b, c, d
 ;;  c = a * b
 ;;
-longMulABC:
+longMul:
     push rax
     push rbx
     push rcx
@@ -169,13 +173,37 @@ longMulABC:
     
     xor rbx, rbx
     
+    mov rsi, c
+    call longFlush
+    
     mov rcx, 64
     .loop:
+        mov rsi, c
+        mov rdi, d
+        call longMov
+        
         mov al, [b + rbx]
         mov rsi, a
-        call longMulRefAlC
-        mov rsi, c
-        call longShr
+        call longShortMul
+        
+        ; cyclical shift
+            push rcx
+            
+            mov rcx, rbx
+            cmp rcx, 0
+            je .if
+                .shift:
+                    mov rsi, c
+                    call longShr
+                loop .shift
+            .if:
+            
+            pop rcx
+        
+        mov rsi, d
+        mov rdi, c
+        call longAdd
+        
         inc rbx
     loop .loop
     
@@ -189,7 +217,7 @@ longMulABC:
 ;;
 ;;  c = [rsi] * al
 ;;
-longMulRefAlC:
+longShortMul:
     push rax
     push rbx
     push rcx
@@ -263,22 +291,26 @@ longShr:
 ;;  [rdi] = [rsi]
 ;;
 longMov:
+    push rax
     push rcx
     push rdx
     push rsi
+    push rdi
     
     xor rdx, rdx
     
     mov rcx, 64
     .loop:
         mov al, [rsi + rdx]
-        mov [rdi + rdx], ah
+        mov [rdi + rdx], al
         inc rdx
     loop .loop
     
+    pop rdi
     pop rsi
     pop rdx
     pop rcx
+    pop rax
     ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
