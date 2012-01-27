@@ -1,6 +1,7 @@
 ; Nasm file
 
 section .data
+    hM      times 64 db 0 ; realy is 32
     len     equ 129
     buffer  times 128 db 0
             db 0x0A
@@ -16,6 +17,39 @@ section .data
     c       times 64 db 0
     d       times 64 db 0
     
+    q       db  0x2D, 0xDD, 0x49, 0x6F
+            db  0xAC, 0xF0, 0x89, 0x72
+            db  0x0D, 0xD5, 0x5D, 0x28
+            db  0xC7, 0xBD, 0x64, 0xB0
+            
+            db  0xDD, 0x09, 0x48, 0xF2
+            db  0x88, 0x1E, 0xA3, 0xCD
+            db  0xDF, 0x5E, 0x26, 0xC8
+            db  0x7E, 0x5E, 0x91, 0x98
+            
+            times 32 db 0
+    
+    p       db  0xE3, 0x79, 0xC3, 0xB1
+            db  0xC9, 0x5E, 0x19, 0xF2
+            db  0x6E, 0x97, 0x65, 0xD1
+            db  0x45, 0xC3, 0xB0, 0x6B
+            
+            db  0x78, 0x39, 0x58, 0x84
+            db  0x39, 0x75, 0x17, 0x23
+            db  0x0F, 0x19, 0xE9, 0x43
+            db  0xB3, 0x12, 0x0A, 0xEA
+            
+            db  0x86, 0x33, 0xDC, 0xE5
+            db  0x2C, 0x32, 0x97, 0xBC
+            db  0x63, 0x4D, 0x7A, 0x97
+            db  0xE2, 0x10, 0x45, 0x85
+            
+            db  0x69, 0x2A, 0xB8, 0x9E
+            db  0xB8, 0x59, 0x93, 0xB6
+            db  0x8F, 0x60, 0x96, 0x89
+            db  0xAE, 0x72, 0x81, 0xEE
+    
+    
     buf     db '   '
     buf_start	equ 0
     buf_end		equ 0
@@ -25,24 +59,38 @@ section .text
 global _start
 
 _start:
-    ;mov rsi, c
-    ;call longFlush
-    ;mov al, 0x2
-    mov rsi, a
-    mov rdi, b
-    call longMod
-    
-    ;call longGreater2
-    ;mov al, dl
-    ;call al2buf
-    ;call printBuf
-    
-    mov rsi, c
+    mov ecx, hM
+    mov edx, 64
+    call read
+    mov rsi, hM
     call print512bits
-
+    
 _exit0:
     mov eax, 1
     mov ebx, 0
+    int 0x80
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  ecx - ref to buffer
+;;  edx - length
+;;
+read:
+    mov eax, 3
+    mov ebx, 0
+    int 0x80
+    ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  ecx - ref to buffer
+;;  edx - length
+;;
+print:
+    mov eax, 4
+    mov ebx, 1
     int 0x80
     ret
 
