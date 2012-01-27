@@ -1,23 +1,23 @@
 ; Nasm file
 
 section .data
-    hM      times 64 db 0 ; realy is 32
+    hM      times 128 db 0 ; realy is 32
+    
     len     equ 129
     buffer  times 128 db 0
             db 0x0A
-    a       db 0x12
-            db 0x90
-            db 0xF0
-            times 61 db 0
-    b       db 0x11
-            db 0x12
-            db 0x00
-            times 61 db 0
-            
-    c       times 64 db 0
-    d       times 64 db 0
     
-    q       db  0x2D, 0xDD, 0x49, 0x6F
+    a       times 128 db 0
+    b       times 128 db 0
+    c       times 128 db 0
+    d       times 128 db 0
+    
+    R       times 128 db 0
+    Rs      times 128 db 0
+    
+    S       times 128 db 0
+    
+    Q       db  0x2D, 0xDD, 0x49, 0x6F
             db  0xAC, 0xF0, 0x89, 0x72
             db  0x0D, 0xD5, 0x5D, 0x28
             db  0xC7, 0xBD, 0x64, 0xB0
@@ -28,8 +28,9 @@ section .data
             db  0x7E, 0x5E, 0x91, 0x98
             
             times 32 db 0
+            times 64 db 0
     
-    p       db  0xE3, 0x79, 0xC3, 0xB1
+    P       db  0xE3, 0x79, 0xC3, 0xB1
             db  0xC9, 0x5E, 0x19, 0xF2
             db  0x6E, 0x97, 0x65, 0xD1
             db  0x45, 0xC3, 0xB0, 0x6B
@@ -48,6 +49,42 @@ section .data
             db  0xB8, 0x59, 0x93, 0xB6
             db  0x8F, 0x60, 0x96, 0x89
             db  0xAE, 0x72, 0x81, 0xEE
+            
+            times 64 db 0
+    
+    A       db  0x1c, 0xe2, 0x23, 0xce
+            db  0xa6, 0x2a, 0x14, 0x5b
+            db  0x49, 0xd8, 0xc3, 0x6a
+            db  0xd4, 0x2c, 0xbe, 0x8e
+            
+            db  0xb1, 0xaa, 0xb5, 0x2a
+            db  0xbe, 0x48, 0xd6, 0x04
+            db  0x93, 0x50, 0x9E, 0xA4
+            db  0x84, 0x59, 0x75, 0x06
+            
+            db  0xf2, 0x50, 0x0d, 0xb5
+            db  0x37, 0x88, 0x7c, 0x6f
+            db  0x0a, 0x27, 0xb6, 0xb4
+            db  0x38, 0x25, 0xad, 0xaf
+            
+            db  0x27, 0x21, 0xde, 0xaf
+            db  0xd4, 0x82, 0x95, 0x86
+            db  0x4a, 0x77, 0xc8, 0x00
+            db  0x15, 0x03, 0x96, 0x9e
+            
+            times 64 db 0
+    
+    K       db  0x27, 0x21, 0xde, 0xaf
+            db  0xd4, 0x82, 0x95, 0x86
+            
+            times 56 db 0
+            times 64 db 0
+    
+    X       db  0x4a, 0x77, 0xc8, 0x00
+            db  0x15, 0x03, 0x96, 0x9e
+            
+            times 56 db 0
+            times 64 db 0
     
     
     buf     db '   '
@@ -59,16 +96,129 @@ section .text
 global _start
 
 _start:
-    mov ecx, hM
-    mov edx, 64
-    call read
-    mov rsi, hM
+    ;mov ecx, hM
+    ;mov edx, 64
+    ;call read
+    
+    ;call sign
+    
+    mov rsi, P
+    mov rdi, Q
+    call longMod
+    
+    mov rsi, c
     call print512bits
     
 _exit0:
     mov eax, 1
     mov ebx, 0
     int 0x80
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Sign h(M)
+;;
+sign:
+    mov rsi, A
+    mov rdi, a
+    call longMov
+    mov rdi, b
+    call longMov
+
+; Вычислить два значения :
+; r = a^k (mod p) и r’ = r (mod q).
+
+    ; r = a^k (mod p)
+    mov rcx, [K]
+    .loop:
+    push rcx
+    
+        call longMul
+        
+        mov rsi, c
+        mov rdi, P
+        call longMod
+        
+        mov rsi, c
+        mov rdi, a
+        call longMov
+    
+    pop rcx
+    loop .loop
+    
+    mov rsi, a
+    mov rdi, R
+    call longMov
+    
+    ; r' = r (mod q)
+    mov rsi, R
+    mov rdi, Q
+    call longMod
+    
+    mov rdi, Rs
+    mov rsi, c
+    call longMov
+    
+; С использованием секретного ключа х пользователя
+; (отправиетля сообщения) вычислить значение
+; s = (xr' + kh(M))(mod q).
+    
+    mov rsi, X
+    mov rdi, a
+    call longMov
+    mov rsi, Rs
+    mov rdi, b
+    call longMov
+    
+    call longMul
+    
+    mov rsi, c
+    mov rdi, Q
+    call longMod
+    
+    ; save xr'(mod q) in d
+    mov rsi, c
+    mov rdi, d
+    call longMov
+    
+    ; kh(M) (mod q)
+    mov rsi, K
+    mov rdi, a
+    call longMov
+    
+    mov rsi, hM
+    mov rdi, b
+    call longMov
+    
+    call longMul
+    
+    mov rsi, c
+    mov rdi, Q
+    call longMod
+    
+    ; (xr' + kh(M))(mod q)
+    mov rsi, c
+    mov rdi, d
+    call longAdd
+    
+    mov rsi, c
+    mov rdi, Q
+    call longMod
+    
+    ; save result in S
+    mov rsi, c
+    mov rdi, S
+    call longMov
+    
+    ; print r'
+    mov rsi, Rs
+    call print512bits
+    
+    ; print s
+    mov rsi, S
+    call print512bits
+    
     ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -169,7 +319,7 @@ longAdd:
     
     xor rdx, rdx
     
-    mov rcx, 64
+    mov rcx, 128
     .loop:
         mov al, [rsi + rdx]
         mov bl, [rdi + rdx]
@@ -200,7 +350,7 @@ longSub:
     
     xor rdx, rdx
     
-    mov rcx, 64
+    mov rcx, 128
     .loop:
         mov al, [rsi + rdx]
         mov bl, [rdi + rdx]
@@ -232,7 +382,7 @@ longMul:
     mov rsi, c
     call longFlush
     
-    mov rcx, 64
+    mov rcx, 128
     .loop:
         mov rsi, c
         mov rdi, d
@@ -284,7 +434,7 @@ longShortMul:
     xor ah, ah
     xor rdx, rdx
     
-    mov rcx, 64
+    mov rcx, 128
     .loop:
         mov al, [rsi + rdx]
         mov [c + rdx], ah
@@ -307,9 +457,9 @@ longShortMul:
 longFlush:
     push rcx
     
-    mov rcx, 63
+    mov rcx, 128
     .loop:
-        mov byte [rsi + rcx], 0
+        mov byte [rsi + rcx - 1], 0
     loop .loop
     
     pop rcx
@@ -328,7 +478,7 @@ longShr:
     xor ah, ah
     xor rbx, rbx
     
-    mov rcx, 64
+    mov rcx, 128
     .loop:
         mov al, [rsi + rbx]
         mov [rsi + rbx], ah
@@ -355,7 +505,7 @@ longMov:
     
     xor rdx, rdx
     
-    mov rcx, 64
+    mov rcx, 128
     .loop:
         mov al, [rsi + rdx]
         mov [rdi + rdx], al
@@ -433,7 +583,7 @@ longGreater2:
     
     xor rdx, rdx
     
-    mov rcx, 64
+    mov rcx, 128
     .loop:
         mov al, [rsi + rcx - 1]
         mov ah, [rdi + rcx - 1]
@@ -493,7 +643,7 @@ longGreater:
     
     xor rdx, rdx
     
-    mov rcx, 64
+    mov rcx, 128
     .loop:
         mov al, [rsi + rcx - 1]
         mov ah, [rdi + rcx - 1]
