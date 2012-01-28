@@ -77,8 +77,8 @@ section .data
             
             times 64 db 0
     
-    K       db  0x27, 0x21, 0xde, 0xaf
-            db  0xd4, 0x82, 0x95, 0x86
+    K       db  0x27, 0x00, 0x00, 0x00
+            db  0x00, 0x00, 0x00, 0x00
             
             times 56 db 0
             times 64 db 0
@@ -107,22 +107,22 @@ section .text
 global _start
 
 _start:
-    ;mov ecx, hM
-    ;mov edx, 64
-    ;call read
+    mov ecx, hM
+    mov edx, 64
+    call read
     
-    ;call sign
+    call sign
     
-    mov rsi, P
-    mov rdi, Q
-    call longMod
+    ;mov rsi, P
+    ;mov rdi, Q
+    ;call longMod
     
     ;mov al, dl
     ;call al2buf
     ;call printBuf
     
-    mov rsi, c
-    call print512bits
+    ;mov rsi, c
+    ;call print512bits
     
 _exit0:
     mov eax, 1
@@ -154,6 +154,8 @@ sign:
         mov rsi, c
         mov rdi, P
         call longMod
+    
+    call endline
         
         mov rsi, c
         mov rdi, a
