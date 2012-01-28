@@ -1,0 +1,38 @@
+
+=pod
+
+=head1 Задачи по курсу "Криптопротоколы"
+
+=head2  ГОСТ 34.10-94 получение подписи
+
+Файл - ./1/sign.asm. Написан под 64х битный Linux.
+Требуется perl модуль Digest::GOST, который используется для получения хеша из
+ГОСТ 34.11-94.
+    
+    # install Digest::GOST
+    sudo cpan Digest::GOST
+
+    # Compile && link
+    nasm -f elf64 sign.asm -o sign.o && ld sign.o -o sign
+
+    # Run
+    perl -e 'use Digest::GOST qw(gost); print gost("This is message, length=32 bytes")' | ./sign
+
+=head2 Шифрование с закладкой
+
+Файл - ./2/crypt.pl. Требуются модули Crypt::Blowfish, Digest::MD5.
+
+    sudo cpan Crypt::Blowfish Digest::MD5
+    
+    # normal encode
+    cat text2.txt | ./crypt.pl -e password | ./crypt.pl -d password
+    
+    # bit ivertation
+    cat text.txt  | ./crypt.pl -e password | ./crypt.pl -d password
+
+=head2 Шифрование с бэкдором
+
+Файл - ./3/crypt.pl. Требуются модули Crypt::Blowfish, Digest::MD5.
+То же самое, что и в предыдущей задаче, но следим за появлением скрытого файла '.off'
+
+=head2 

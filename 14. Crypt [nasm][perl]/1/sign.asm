@@ -15,6 +15,7 @@ section .data
     ee      times 128 db 0
     f       times 128 db 0
     
+    V       times 128 db 0
     R       times 128 db 0
     Rs      times 128 db 0
     
@@ -154,8 +155,6 @@ sign:
         mov rsi, c
         mov rdi, P
         call longMod
-    
-    call endline
         
         mov rsi, c
         mov rdi, a
@@ -230,11 +229,11 @@ sign:
     
     ; print r'
     mov rsi, Rs
-    call print512bits
+    call print256bits
     
     ; print s
     mov rsi, S
-    call print512bits
+    call print256bits
     
     ret
 
@@ -317,6 +316,30 @@ print512bits:
     push rsi
     
     mov rcx, 64
+    .loop:
+        mov al, [rsi]
+        call al2buf
+        call printBuf
+        inc rsi
+    loop .loop
+    
+    pop rsi
+    pop rcx
+    pop rbx
+    pop rax
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  @param rsi
+;;
+print256bits:
+    push rax
+    push rbx
+    push rcx
+    push rsi
+    
+    mov rcx, 32
     .loop:
         mov al, [rsi]
         call al2buf
@@ -877,30 +900,3 @@ al2buf:
 	
 	ret
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  How much [rsi] bigger than [dsi]
-;;
-howMuch:
-	push rsi
-	push rdi
-	push rax
-	push rbx
-	push rcx
-	push rdx
-	
-    xor rdx, rdx
-    
-    mov rcx, 128
-    
-	.loop:
-	
-	loop .loop
-	
-    pop rdx
-	pop rcx
-	pop rbx
-	pop rax
-	pop rdi
-	pop rsi
-    ret
