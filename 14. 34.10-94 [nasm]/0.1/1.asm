@@ -5,12 +5,15 @@ section .data
     
     len     equ 129
     buffer  times 128 db 0
-            db 0x0A
+    endl    db 0x0A
     
     a       times 128 db 0
     b       times 128 db 0
     c       times 128 db 0
     d       times 128 db 0
+    e       times 128 db 0
+    ee      times 128 db 0
+    f       times 128 db 0
     
     R       times 128 db 0
     Rs      times 128 db 0
@@ -86,6 +89,14 @@ section .data
             times 56 db 0
             times 64 db 0
     
+    n       db 0x4a, 0x77, 0xc8, 0x01, 0xab, 0xff
+            times 59 db 0
+            times 64 db 0
+            
+    m       db 0x15, 0x03, 0x16, 0x10
+            times 60 db 0
+            times 64 db 0
+    
     
     buf     db '   '
     buf_start	equ 0
@@ -105,6 +116,10 @@ _start:
     mov rsi, P
     mov rdi, Q
     call longMod
+    
+    ;mov al, dl
+    ;call al2buf
+    ;call printBuf
     
     mov rsi, c
     call print512bits
@@ -241,6 +256,14 @@ read:
 print:
     mov eax, 4
     mov ebx, 1
+    int 0x80
+    ret
+
+endline:
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, endl
+    mov edx, 1
     int 0x80
     ret
 
@@ -494,6 +517,31 @@ longShr:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;;  << [rsi]
+;;
+longShl:
+    push rax
+    push rbx
+    push rcx
+    push rsi
+    
+    xor ah, ah
+    
+    mov rcx, 128
+    .loop:
+        mov al, [rsi + rcx - 1]
+        mov [rsi + rcx - 1], ah
+        mov ah, al
+    loop .loop
+    
+    pop rsi
+    pop rcx
+    pop rbx
+    pop rax
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;;  [rdi] = [rsi]
 ;;
 longMov:
@@ -532,8 +580,24 @@ longMod:
     
     xor rdx, rdx
     
-    .while:
+    ; f = rsi
+    ;
+    mov rax, rdi
+    mov rdi, f
+    call longMov
+    mov rdi, rax
     
+    ; e = rdi
+    ;
+    xchg rsi, rdi
+    mov rdi, e
+    call longMov
+    
+    mov rsi, f
+    mov rdi, e
+    
+    .while:
+        
         call longGreater
         cmp rdx, 0
         jne .if
@@ -542,22 +606,67 @@ longMod:
             call longMov
             jmp .endwhile
         .if:
-        ;cmp rdx, 1
-        ;jne .elsif
-        ; rdx != 0
+        cmp rdx, 2
+        jg .elsif
+        ; 0 < rdx <= 2
             call longSub
             mov rsi, c
             
             jmp .endif
-        ;.elsif:
-        ; rdx > 1
-        ;    push rdi
-        ;    push rsi
-        ;        
-        ;        call longShr
-        ;    
-        ;    pop rsi
-        ;    pop rdi
+        .elsif:
+        ; rdx > 2
+            push rsi
+            push rdi
+        
+            ; ee = e >> (rdx - 1)
+            mov rsi, e
+            mov rdi, ee
+            call longMov
+        
+            mov rsi, ee
+            
+            dec rdx
+            mov rcx, rdx
+            .loop:
+                call longShr            
+            loop .loop
+            
+            
+            ; if ( f > ee ) f -= ee;
+            mov rsi, f
+            mov rdi, ee
+            call longGreater
+            dec rdx
+            cmp rdx, 0
+            je .if3
+                
+                mov rsi, ee
+                call longShl
+                
+                mov rsi, f
+                mov rdi, ee
+                call longSub
+                
+                mov rsi, c
+                mov rdi, f
+                call longMov
+                jmp .endif3
+                
+            .if3:
+                mov rsi, f
+                mov rdi, ee
+;call endline
+                
+                call longSub
+                mov rsi, c
+                mov rdi, f
+                call longMov
+            
+            .endif3:
+        
+            pop rdi
+            pop rsi
+            
         .endif:
         
     jmp .while
@@ -765,3 +874,31 @@ al2buf:
 	pop rsi
 	
 	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  How much [rsi] bigger than [dsi]
+;;
+howMuch:
+	push rsi
+	push rdi
+	push rax
+	push rbx
+	push rcx
+	push rdx
+	
+    xor rdx, rdx
+    
+    mov rcx, 128
+    
+	.loop:
+	
+	loop .loop
+	
+    pop rdx
+	pop rcx
+	pop rbx
+	pop rax
+	pop rdi
+	pop rsi
+    ret
