@@ -130,4 +130,3 @@ mouse_flushStatus proc
     ret
 
 mouse_flushStatus endp
-

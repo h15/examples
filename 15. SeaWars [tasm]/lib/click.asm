@@ -98,7 +98,8 @@ click_route proc
 click_route endp
 
 click_route_selfField proc
-    ; inside
+    
+    
     xor bx, bx
     mov ah, 2       ; set pos
     int 10h

@@ -19,6 +19,7 @@ game_stage      db 0
 ; 00 -> select ship type
 ; 10 -> select ship position
 game_shipSize   db 0
+game_shipPos    dw 4 dup(0)
 ; 20 -> check ("show OK button")
 ; 30 -> OK pressed
 
