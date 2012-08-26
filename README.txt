@@ -43,3 +43,13 @@
     
 13. Using sys select [C]
      - sys/select example.
+
+14. Crypt [nasm][perl]
+    - GOST 34.10-94 in nasm (slow sign).
+    - Crypto encode with weak encode on demaind.
+    - Crypto encode with backdoor.
+    - Safe game without 3rd part server.
+    - Crypto encoded broadcast/multicast(!) chat.
+
+15. Sea Wars [tasm]
+    - Game for DOS with network support (using COM-port).
