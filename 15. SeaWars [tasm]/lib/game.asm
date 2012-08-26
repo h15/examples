@@ -14,6 +14,16 @@
 ; DATA
 game_seconds    dw 0
 game_curTime    dw 0
+game_stage      db 0
+; game_stage:
+; 00 -> select ship type
+; 10 -> select ship position
+game_shipSize   db 0
+; 20 -> check ("show OK button")
+; 30 -> OK pressed
+
+game_message_shipSize db 'Ship type: $'
+
 
 ; Main Loop.
 ; Will runs all time.
