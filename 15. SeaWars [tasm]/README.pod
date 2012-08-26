@@ -1,0 +1,28 @@
+
+=head1 NAME
+
+SeaWars the game.
+
+=head1 OVERVIEW
+
+SeaWars - it's a version of old paper game, where you and your friend 
+has 10x10 field. You are setting up some kind of ships (usualy it was
+one 4-cells ship, two 3-cells ships, three 2-cells ships and four 1-cell ships).
+
+After that gamers starts to play.
+
+Step by step each player can 'strike' one of cell in enemy's field. If his
+strike founds emeny's ship - he can strike again, or he must take next step to
+his enemy.
+
+Wins player, who destroys all enemy's ships.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2011, Georgy Bazhukov.
+
+This program is free software, you can redistribute it and/or modify it under
+the terms of the Artistic License version 2.0.
+
+=cut
+
