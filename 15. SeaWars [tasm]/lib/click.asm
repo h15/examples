@@ -27,6 +27,12 @@ click_route proc
     ;   - Enemy's game field;
     ;   - My ships.
     
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;
+    ;;  STAGE 10h
+    ;;
+    
     ; Self field
         mov ax, ui_border_offsetYX
         mov bl, ui_border_sizeX
@@ -47,6 +53,12 @@ click_route proc
         ; ACTION
         call click_route_selfField
         jmp click_route_exit
+    
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;
+    ;;  STAGE 50h
+    ;;
     
     click_route_not_self:
     ; Enemy's field
@@ -70,6 +82,12 @@ click_route proc
         ; ACTION
         call click_route_enemyField
         jmp click_route_exit
+    
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;
+    ;;  STAGE 00h
+    ;;
     
     click_route_not_enemy:
     ; My ships
@@ -98,7 +116,15 @@ click_route proc
 click_route endp
 
 click_route_selfField proc
+    mov dh, mouse_status_position_y
+    mov dl, mouse_status_position_x
+    call ship_isFieldFree
     
+    ; If cell is not free.
+    cmp ax, 0
+    je click_route_selfField_exit
+    
+    call ship_addShipCell
     
     xor bx, bx
     mov ah, 2       ; set pos
@@ -109,6 +135,7 @@ click_route_selfField proc
     mov cx, 1
     int 10h
     
+    click_route_selfField_exit:
     ret
 click_route_selfField endp
 
@@ -126,6 +153,14 @@ click_route_enemyField proc
     ret
 click_route_enemyField endp
 
+
+; STAGE 00h
+;
+; Select ship type.
+; How much cells we need.
+;
+; 00h -> 10h -> 00h
+;         \---> 20h
 click_route_selectShipType proc
     mov game_stage, 10h
     

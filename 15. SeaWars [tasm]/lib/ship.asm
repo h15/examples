@@ -31,9 +31,9 @@ ship_enemy_4_count  db 4
 ; s     - side (self / enemy)
 ; si    - cells in ship + 1 (size)
 ; Y     - Y position
-; di    - direction 0 - for south
+; di    - direction 0 - for north
 ;                   1 - for east
-;                   2 - for north
+;                   2 - for south
 ;                   3 - for west
 ; L     - live
 ; X pos - X position
@@ -50,7 +50,6 @@ ship_enemy dw 100 dup(0)
 ship_isFieldFree proc
     mov si, offset ship_self
     sub si, 2
-    mov ax, 1
     
     ship_isFieldFree_loop:
         add si, 2
@@ -72,12 +71,48 @@ ship_isFieldFree proc
                 ; Equal!
                     mov ax, 0
                     ret
-            ; second and more
             
+            ; second and more
+            cmp cx, 0
+            je ship_isFieldFree_loop
+            
+            dec cx
+            ship_isFieldFree_loop_second:
+            push cx
+                cmp ax, 0 ; north
+                jne ship_isFieldFree_loop_second_not_north
+                    sub bx, 0100h
+                    jmp ship_isFieldFree_loop_second_cmp
+                ship_isFieldFree_loop_second_not_north:
+                cmp ax, 1 ; east
+                jne ship_isFieldFree_loop_second_not_east
+                    add bx, 0001h
+                    jmp ship_isFieldFree_loop_second_cmp
+                ship_isFieldFree_loop_second_not_east:
+                cmp ax, 2 ; south
+                jne ship_isFieldFree_loop_second_not_south
+                    add bx, 0100h
+                    jmp ship_isFieldFree_loop_second_cmp
+                ship_isFieldFree_loop_second_not_south:
+                    sub bx, 0001h; west
+                    jmp ship_isFieldFree_loop_second_cmp
+                
+                ; Compare this cell.
+                ship_isFieldFree_loop_second_cmp:
+                    cmp bx, dx
+                    jne ship_isFieldFree_loop
+                    ; Equal!
+                        mov ax, 0
+                        ret
+                
+            pop cx
+            loop ship_isFieldFree_loop_second
             
             
     jmp ship_isFieldFree_loop
     
     ship_isFieldFree_exit:
+    
+    mov ax, 1 ; FREE
     ret
 ship_isFieldFree endp
