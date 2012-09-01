@@ -17,18 +17,18 @@
 video_oldmod    db 0
 video_oldpage   db 0
 video_font: ; Change font for nice pseudographic.
-	r_border	db 8 dup(1)
-	b_border	db 7 dup(0)
-				db 0ffh
-	rb_border	db 7 dup(1)
-				db 0ffh
-	
-	cells		db 8 dup(01111110b)
-	miss		db 3 dup(1)
-				db 00010001b
-				db 3 dup(1)
-				db 0ffh
-	ship		db 8 dup(0ffh)
+    r_border    db 8 dup(1)
+    b_border    db 7 dup(0)
+                db 0ffh
+    rb_border    db 7 dup(1)
+                db 0ffh
+    
+    cells        db 8 dup(01111110b)
+    miss        db 3 dup(1)
+                db 00010001b
+                db 3 dup(1)
+                db 0ffh
+    ship        db 8 dup(0ffh)
 
 ; Install 2 video mod.
 ;
@@ -87,8 +87,8 @@ video_loadFont proc
     pop es
     push offset video_font
     pop bp
-	
-	mov cx, 6
+    
+    mov cx, 6
     mov dx, 0
     mov bx, 0800h
     mov ax, 1100h

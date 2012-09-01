@@ -21,17 +21,17 @@
 
 main:
     jmp main_1
-
+    
     ; Preload libs.
-		include lib/kbd.asm
-		include lib/hooks.asm
-		include lib/mouse.asm
-		include lib/video.asm
-	    include lib/game.asm
+        include lib/kbd.asm
+        include lib/hooks.asm
+        include lib/mouse.asm
+        include lib/video.asm
+        include lib/game.asm
         include lib/ui.asm
         include lib/ship.asm
         include lib/click.asm
-	;   include lib/com.asm
+    ;   include lib/com.asm
     ; Data.
         main_log_init db 'Init: DONE', 13,10,36
         main_log_exit db 'Exit: DONE', 13,10,36

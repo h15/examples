@@ -184,6 +184,8 @@ click_route_selectShipType proc
         mov ah, 0ah
         int 10h
         
+        mov game_tmp_shipSize, 4
+        
         ret
     click_route_selectShipType_3:
     cmp dh, 4
@@ -205,6 +207,8 @@ click_route_selectShipType proc
         mov al, '3'
         mov ah, 0ah
         int 10h
+        
+        mov game_tmp_shipSize, 3
         
         ret
     click_route_selectShipType_2:
@@ -228,6 +232,8 @@ click_route_selectShipType proc
         mov ah, 0ah
         int 10h
         
+        mov game_tmp_shipSize, 2
+        
         ret
     click_route_selectShipType_1:
     cmp dh, 8
@@ -249,6 +255,8 @@ click_route_selectShipType proc
         mov al, '1'
         mov ah, 0ah
         int 10h
+        
+        mov game_tmp_shipSize, 1
         
         ret
     click_route_selectShipType_exit:
