@@ -167,7 +167,7 @@ click_route_selectShipType proc
     cmp dh, 2
     jne click_route_selectShipType_3
     ; 4 cells
-        mov game_shipSize, 4
+        mov game_tmp_shipSize, 4
         
         mov dx, 0
         xor bx, bx
@@ -191,7 +191,7 @@ click_route_selectShipType proc
     cmp dh, 4
     jne click_route_selectShipType_2
     ; 3 cells
-        mov game_shipSize, 3
+        mov game_tmp_shipSize, 3
         
         mov dx, 0
         xor bx, bx
@@ -215,7 +215,7 @@ click_route_selectShipType proc
     cmp dh, 6
     jne click_route_selectShipType_1
     ; 2 cells
-        mov game_shipSize, 2
+        mov game_tmp_shipSize, 2
         
         mov dx, 0
         xor bx, bx
@@ -239,7 +239,7 @@ click_route_selectShipType proc
     cmp dh, 8
     jne click_route_selectShipType_exit
     ; 1 cell
-        mov game_shipSize, 1
+        mov game_tmp_shipSize, 1
         
         mov dx, 0
         xor bx, bx

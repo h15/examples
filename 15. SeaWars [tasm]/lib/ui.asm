@@ -27,6 +27,7 @@ ui_border_offsetYX  dw 0108h
 ui_render proc
     call ui_render_border
     call ui_shipCount
+    call ui_ships
     ;call ui_testFont
     ret
 ui_render endp
@@ -164,6 +165,7 @@ ui_shipCount proc
     ret
 ui_shipCount endp
 
+
 ; Draw game field.
 ; Draw in pseudo graphic game field.
 ;
@@ -254,3 +256,80 @@ ui_render_field proc
     ret
     
 ui_render_field endp
+
+
+; Draw ships.
+; Render for ship_self.
+
+ui_ships proc
+    xor cx, cx
+    mov cl, ship_self_count
+    lea si, ship_self
+    
+    ; FOR ship_self
+    ui_ships_loop:
+    push cx
+    push si
+        ; Get next ship.
+        add cx, cx
+        add si, cx
+        sub si, 2
+        mov ax, [si]
+        
+        ; Render this ship.
+        call ui_ships_render
+    pop si
+    pop cx
+    loop ui_ships_loop
+    
+    ret
+ui_ships endp
+
+
+; Render ship.
+; @param ax - ship
+
+ui_ships_render proc
+    mov bx, ax
+    mov cx, bx
+    
+    and cx, 0110000000000000b ; size
+    shr cx, 13
+    and ax, 0000000011000000b ; direction
+    shr ax, 6
+    and bx, 0001111100011111b ; YX
+    
+    ui_ships_render_loop:
+    push cx
+        
+        cmp ax, 0 ; north
+        jne ui_ships_render_loop_not_north
+            sub bx, 0100h
+            jmp ui_ships_render_loop_draw
+        ui_ships_render_loop_not_north:
+        cmp ax, 1 ; east
+        jne ui_ships_render_loop_not_east
+            add bx, 0001h
+            jmp ui_ships_render_loop_draw
+        ui_ships_render_loop_not_east:
+        cmp ax, 2 ; south
+        jne ui_ships_render_loop_not_south
+            add bx, 0100h
+            jmp ui_ships_render_loop_draw
+        ui_ships_render_loop_not_south:
+            sub bx, 0001h; west
+            jmp ui_ships_render_loop_draw
+        
+        xor bh, bh  ; video mode
+        mov ah, 2   ; set pos
+        int 10h
+
+        mov al, 0   ; draw al char
+        mov ah, 0ah
+        mov cx, 1
+        int 10h
+    pop cx
+    loop ui_ships_render_loop
+    
+    ret
+ui_ships_render endp

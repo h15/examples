@@ -137,8 +137,13 @@ ship_addShipCell proc
     
     ; add cell
     mov si, offset game_tmp_shipPos
-    mul bl, 2
-    add si, bl
+    
+    push bx
+        xor bh, bh
+        add bl, bl
+        add si, bx
+    pop bx
+    
     mov [si], dx ; moved!
     mov bl, game_tmp_shipDone
     inc bl
@@ -164,6 +169,29 @@ ship_movTmpToArray proc
     ; Generate ship from pos array.
     call ship_posToShip
     
+    cmp dx, 0
+    je ship_movTmpToArray_cleanup
+    ; Add ship to array
+        mov si, offset ship_self
+        xor ax, ax
+        mov al, ship_self_count
+        add ax, ax
+        add si, ax
+        mov [si], dx    ; PUSH ShipArray, dx
+        
+        mov al, ship_self_count
+        inc al
+        mov ship_self_count, al
+        
+    ship_movTmpToArray_cleanup:
+        mov game_tmp_shipDone, 0
+        mov game_tmp_shipSize, 0
+        mov game_stage, 00h
+    
+    mov ah, 9
+    lea dx, main_log_init
+    int 21h
+    
     ret
 ship_movTmpToArray endp
 
@@ -176,7 +204,8 @@ ship_movTmpToArray endp
 ; +-+--+-----+--+-+-----+
 
 ship_posToShip proc
-    mov cx, game_tmp_shipSize
+    xor cx, cx
+    mov cl, game_tmp_shipSize
     mov si, offset game_tmp_shipPos
     
     ; Just one cell.
@@ -197,11 +226,11 @@ ship_posToShip proc
                 ship_posToShip_multicell_TestXLoop: ; Test X-line. FOR x in cells.
                 push cx
                     ; IF cell is last in list of cells (first in loop).
-                    cmp cx, game_tmp_shipSize
+                    cmp cl, game_tmp_shipSize
                     jne ship_posToShip_multicell_TestXLoop_notFirst
                         ; First cell
                         push si
-                            mul cx, 2
+                            add cx, cx
                             add si, cx
                             sub si, 2
                             mov ax, [si]
@@ -209,21 +238,22 @@ ship_posToShip proc
                             
                             ; IF first and next cell's x-pos are equal.
                             cmp al, bl
-                            jne ship_posToShip_multicell_TestXLoop_firstFAIL
+                            jne ship_posToShip_multicell_TestXLoop_firstFAIL1
                                 ; all fine - move to next cell
                                 ; CONTINUE
-                                jmp ship_posToShip_multicell_TestXLoop_firstFAIL_end
+                                jmp ship_posToShip_multicell_TestXLoop_firstFAIL_end1
                             
                             ; ELSE
-                            ship_posToShip_multicell_TestXLoop_firstFAIL:
+                            ship_posToShip_multicell_TestXLoop_firstFAIL1:
                                 ; not horizontal - goto vertacal test.
                                 ; GOTO Y TEST
                                 pop si
                                 pop cx
+                                pop cx
                                 jmp ship_posToShip_multicell_lineTest_Y
                             
                             ; ENDIF
-                            ship_posToShip_multicell_TestXLoop_firstFAIL_end:
+                            ship_posToShip_multicell_TestXLoop_firstFAIL_end1:
                             
                         pop si
                         jmp ship_posToShip_multicell_TestXLoop_end
@@ -232,7 +262,7 @@ ship_posToShip proc
                     ship_posToShip_multicell_TestXLoop_notFirst:
                         ; Other cells
                         push si
-                            mul cx, 2
+                            add cx, cx
                             add si, cx
                             sub si, 2
                             mov ax, [si]
@@ -240,19 +270,20 @@ ship_posToShip proc
                             
                             ; IF first and next cell's x-pos are equal.
                             cmp al, bl
-                            jne ship_posToShip_multicell_TestXLoop_firstFAIL
+                            jne ship_posToShip_multicell_TestXLoop_firstFAIL2
                                 ; all fine - move to next cell
-                                jmp ship_posToShip_multicell_TestXLoop_firstFAIL_end
+                                jmp ship_posToShip_multicell_TestXLoop_firstFAIL_end2
                             
                             ; ELSE
-                            ship_posToShip_multicell_TestXLoop_firstFAIL:
+                            ship_posToShip_multicell_TestXLoop_firstFAIL2:
                                 ; not horizontal - goto vertacal test.
                                 pop si
+                                pop cx
                                 pop cx
                                 jmp ship_posToShip_multicell_lineTest_Y
                             
                             ; ENDIF
-                            ship_posToShip_multicell_TestXLoop_firstFAIL_end:
+                            ship_posToShip_multicell_TestXLoop_firstFAIL_end2:
                             
                         pop si
                         jmp ship_posToShip_multicell_TestXLoop_end
@@ -272,11 +303,11 @@ ship_posToShip proc
                 ship_posToShip_multicell_TestYLoop: ; Test Y-line. FOR y in cells.
                 push cx
                     ; IF cell is last in list of cells (first in loop).
-                    cmp cx, game_tmp_shipSize
+                    cmp cl, game_tmp_shipSize
                     jne ship_posToShip_multicell_TestYLoop_notFirst
                         ; First cell
                         push si
-                            mul cx, 2
+                            add cx, cx
                             add si, cx
                             sub si, 2
                             mov ax, [si]
@@ -284,22 +315,23 @@ ship_posToShip proc
                             
                             ; IF first and next cell's y-pos are equal.
                             cmp ah, bh
-                            jne ship_posToShip_multicell_TestYLoop_firstFAIL
+                            jne ship_posToShip_multicell_TestYLoop_firstFAIL1
                                 ; all fine - move to next cell
                                 ; CONTINUE
-                                jmp ship_posToShip_multicell_TestYLoop_firstFAIL_end
+                                jmp ship_posToShip_multicell_TestYLoop_firstFAIL_end1
                             
                             ; ELSE
-                            ship_posToShip_multicell_TestYLoop_firstFAIL:
+                            ship_posToShip_multicell_TestYLoop_firstFAIL1:
                                 ; not horizontal & not vertacal - FAIL.
                                 ; return 0
                                 pop si
+                                pop cx
                                 pop cx
                                 mov dx, 0
                                 ret
                             
                             ; ENDIF
-                            ship_posToShip_multicell_TestYLoop_firstFAIL_end:
+                            ship_posToShip_multicell_TestYLoop_firstFAIL_end1:
                             
                         pop si
                         jmp ship_posToShip_multicell_TestYLoop_end
@@ -308,7 +340,7 @@ ship_posToShip proc
                     ship_posToShip_multicell_TestYLoop_notFirst:
                         ; Other cells
                         push si
-                            mul cx, 2
+                            add cx, cx
                             add si, cx
                             sub si, 2
                             mov ax, [si]
@@ -316,21 +348,22 @@ ship_posToShip proc
                             
                             ; IF first and next cell's y-pos are equal.
                             cmp ah, bh
-                            jne ship_posToShip_multicell_TestYLoop_firstFAIL
+                            jne ship_posToShip_multicell_TestYLoop_firstFAIL2
                                 ; all fine - move to next cell
-                                jmp ship_posToShip_multicell_TestYLoop_firstFAIL_end
+                                jmp ship_posToShip_multicell_TestYLoop_firstFAIL_end2
                             
                             ; ELSE
-                            ship_posToShip_multicell_TestYLoop_firstFAIL:
+                            ship_posToShip_multicell_TestYLoop_firstFAIL2:
                                 ; not horizontal & not vertacal - FAIL.
                                 ; return 0
                                 pop si
+                                pop cx
                                 pop cx
                                 mov dx, 0
                                 ret
                             
                             ; ENDIF
-                            ship_posToShip_multicell_TestYLoop_firstFAIL_end:
+                            ship_posToShip_multicell_TestYLoop_firstFAIL_end2:
                             
                         pop si
                         jmp ship_posToShip_multicell_TestYLoop_end
@@ -349,18 +382,49 @@ ship_posToShip proc
         ship_posToShip_solidTest:
             push cx
                 ; Find first cell (smallest).
-                xor bx, bx ; It will be saves in bx.
+                mov bx, 0ffffh ; It will be saves in bx.
                 ship_posToShip_solidTest_loop:
                 push cx
                     push si
-                        mul cx, 2
+                        add cx, cx
                         add si, cx
                         sub si, 2
                         mov ax, [si]
-                        mov bx, [si - 2]
+                        ; bx >= ax ? bx = ax : 1 for shipCells
+                        cmp bx, ax
+                        jl ship_posToShip_solidTest_loop_greater
+                            mov bx, ax
+                        ship_posToShip_solidTest_loop_greater:
+                    pop si
                 pop cx
                 loop ship_posToShip_solidTest_loop
             pop cx
-    
+            
+            push cx
+                ; Create Ship dword.
+                ; If test fails - just destroy it (by xor).
+                or dx, bx
+                dec cx
+                shl cx, 13
+                or dx, cx
+            pop cx
+            
+            push dx
+            push cx
+            ; TODO: solid test does not complite.
+            ;
+            ;    ship_posToShip_solidTest_loop2:
+            ;    push cx
+            ;        push si
+            ;            mul cx, 2
+            ;            add si, cx
+            ;            sub si, 2
+            ;            mov ax, [si]
+            ;            
+            ;        pop si
+            ;    pop cx
+            ;    loop ship_posToShip_solidTest_loop2
+            pop cx
+            pop dx
     ret
 ship_posToShip endp

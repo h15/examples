@@ -20,10 +20,10 @@ video_font: ; Change font for nice pseudographic.
     r_border    db 8 dup(1)
     b_border    db 7 dup(0)
                 db 0ffh
-    rb_border    db 7 dup(1)
+    rb_border   db 7 dup(1)
                 db 0ffh
     
-    cells        db 8 dup(01111110b)
+    cells       db 8 dup(01111110b)
     miss        db 3 dup(1)
                 db 00010001b
                 db 3 dup(1)
