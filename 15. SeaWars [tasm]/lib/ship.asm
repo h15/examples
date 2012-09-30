@@ -83,6 +83,13 @@ ship_isFieldFree endp
 ;   game_tmp_shipPos    dw 4 dup(0)
 
 ship_addShipCell proc
+    push dx
+    call ship_check_cellArea
+    pop dx
+    cmp ax, 0
+    je ship_addShipCell_exit
+    
+    ;
     mov bh, game_tmp_shipSize
     mov bl, game_tmp_shipDone
     
@@ -169,6 +176,69 @@ ship_movTmpToArray proc
     
     ret
 ship_movTmpToArray endp
+
+
+; Check cell's area.
+; Does space enought?
+; @param dx - YX
+; @return ax - 0|1 - false|true
+
+ship_check_cellArea proc
+    xor cx, cx
+    mov cl, ship_self_count
+        
+    ; If ship-set is empty.
+    cmp cl, 0
+    je ship_check_cellArea_exit
+    
+    lea si, ship_self
+    push cs
+    pop ds
+    
+    shl cx, 4   ; 4 cells
+    ship_check_cellArea_loop:
+    push cx
+        lodsw
+        sub ax, dx
+        
+        ; dx - ax =
+        ;
+        ;  0101 | 0100 | 00ff
+        ; ------+------+------
+        ;  0001 |   *  | 0fff
+        ; ------+------+------
+        ;  ff01 | ff00 | feff
+        
+        cmp ax, 0101h
+        je ship_check_cellArea_loop_tooClose
+        cmp ax, 0100h
+        je ship_check_cellArea_loop_tooClose
+        cmp ax, 00ffh
+        je ship_check_cellArea_loop_tooClose
+        cmp ax, 0001h
+        je ship_check_cellArea_loop_tooClose
+        cmp ax, 0ffffh
+        je ship_check_cellArea_loop_tooClose
+        cmp ax, 0ff01h
+        je ship_check_cellArea_loop_tooClose
+        cmp ax, 0ff00h
+        je ship_check_cellArea_loop_tooClose
+        cmp ax, 0feffh
+        je ship_check_cellArea_loop_tooClose
+        
+        jmp ship_check_cellArea_loop_normal
+        ship_check_cellArea_loop_tooClose:
+            pop cx      ; BAD
+            mov ax, 0
+            ret
+        ship_check_cellArea_loop_normal:
+    pop cx
+    loop ship_check_cellArea_loop
+    
+    ship_check_cellArea_exit:
+        mov ax, 1
+        ret
+ship_check_cellArea endp
 
 
 ; Check ship.
