@@ -13,6 +13,7 @@
 ; the terms of the Artistic License version 2.0.
 
 com_base dw 0
+com_type db 0 ; slave, master = 0, 1
 
 ; Install com int handler.
 

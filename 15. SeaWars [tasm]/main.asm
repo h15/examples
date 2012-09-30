@@ -48,8 +48,37 @@ main:
     ; Data.
         main_log_init db 'Init: DONE', 13,10,36
         main_log_exit db 'Exit: DONE', 13,10,36
+        main_usage  db 13, 10
+                    db '    Run this program with one param:', 13, 10
+                    db '        s - to run it as COM slave;' , 13, 10
+                    db '        m - to run it as COM master.', 13, 10
+                    db '    For example:', 13, 10
+                    db '        main s', 13, 10, 36
 
     main_1:
+        ; Get params
+        mov si, 82h
+        lodsb
+        cmp al, 's'
+        je main_runAsSlave
+        cmp al, 'm'
+        je main_runAsMaster
+        
+        ; Bad param - show usage.
+        mov ah, 9
+        lea dx, main_usage
+        int 21h
+        
+        ret
+        
+        main_runAsSlave:
+            mov com_type, 0
+            jmp main_init
+        
+        main_runAsMaster:
+            mov com_type, 1
+            jmp main_init
+        
         ; Init devices.
         main_init:
             call hooks_install
