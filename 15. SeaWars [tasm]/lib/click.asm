@@ -21,7 +21,7 @@ click_route proc
     mov dl, mouse_status_position_x
     mov dh, mouse_status_position_y
     
-    ; Which zone was clicked?
+    ; Which zone were clicked?
     ; Zones:
     ;   - Self game field;
     ;   - Enemy's game field;

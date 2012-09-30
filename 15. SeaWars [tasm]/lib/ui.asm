@@ -288,6 +288,10 @@ ui_ships endp
 
 ; Render ship.
 ; @param ax - ship
+;
+; +-+--+-----+--+-+-----+ 
+; |s|si|  Y  |di|L|  X  |  DWORD
+; +-+--+-----+--+-+-----+
 
 ui_ships_render proc
     mov bx, ax
@@ -301,33 +305,44 @@ ui_ships_render proc
     
     ui_ships_render_loop:
     push cx
-        
+    push ax
+    push bx
         cmp ax, 0 ; north
         jne ui_ships_render_loop_not_north
             sub bx, 0100h
             jmp ui_ships_render_loop_draw
         ui_ships_render_loop_not_north:
+        
         cmp ax, 1 ; east
         jne ui_ships_render_loop_not_east
             add bx, 0001h
             jmp ui_ships_render_loop_draw
         ui_ships_render_loop_not_east:
+        
         cmp ax, 2 ; south
         jne ui_ships_render_loop_not_south
             add bx, 0100h
             jmp ui_ships_render_loop_draw
         ui_ships_render_loop_not_south:
+        
             sub bx, 0001h; west
             jmp ui_ships_render_loop_draw
         
-        xor bh, bh  ; video mode
-        mov ah, 2   ; set pos
-        int 10h
+        ui_ships_render_loop_draw:
+            mov dx, bx
+            xor ax, ax
+            xor bx, bx  ; video mode
+            mov ah, 2   ; set pos
+            int 10h
 
-        mov al, 0   ; draw al char
-        mov ah, 0ah
-        mov cx, 1
-        int 10h
+            mov al, 5   ; draw al char
+            mov ah, 0ah
+            mov cx, 1
+            int 10h
+            
+        mov bx, dx
+    pop bx
+    pop ax
     pop cx
     loop ui_ships_render_loop
     

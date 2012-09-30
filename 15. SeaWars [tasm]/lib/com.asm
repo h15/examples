@@ -1,3 +1,24 @@
+
+; Com
+;
+; Com-port interface.
+; It's part of SeaWars game.
+;
+; Tasm file.
+; Charset cp1251.
+;
+; Copyright (C) 2012, Georgy Bazhukov.
+;
+; This program is free software, you can redistribute it and/or modify it under
+; the terms of the Artistic License version 2.0.
+
+
+; Install com int handler.
+
+com_install proc
+    ret
+com_install endp 
+
 proc com_init
     mov    ax,40h
     push es

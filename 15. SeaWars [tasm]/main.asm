@@ -23,13 +23,25 @@ main:
     jmp main_1
     
     ; Preload libs.
+    
+        ; High-level interface for keyboard.
+        ; Using buffer for 8 chars.
         include lib/kbd.asm
+        ; Hooks for hardware timer and keyboard access.
         include lib/hooks.asm
+        ; Mouse interface.
+        ; Get mouse position, which button was pressed.
         include lib/mouse.asm
+        ; Change current video mode to our prefer mode.
         include lib/video.asm
+        ; Game main loop and other general game-info + logic.
         include lib/game.asm
+        ; Draw UserInterface.
+        ; Also click events are here too.
         include lib/ui.asm
+        ; Ship "object"
         include lib/ship.asm
+        ; Click routing events.
         include lib/click.asm
     ;   include lib/com.asm
     ; Data.
