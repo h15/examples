@@ -173,6 +173,13 @@ click_route_selectShipType proc
     cmp dh, 2
     jne click_route_selectShipType_3
     ; 4 cells
+        ; limit reached !
+        cmp ship_self_4_count, 0
+        jne click_route_selectShipType_ok4
+            jmp click_route_selectShipType_exit
+        click_route_selectShipType_ok4:
+        
+        ;
         mov game_tmp_shipSize, 4
         
         mov dx, 0
@@ -197,6 +204,13 @@ click_route_selectShipType proc
     cmp dh, 4
     jne click_route_selectShipType_2
     ; 3 cells
+        ; limit reached !
+        cmp ship_self_3_count, 0
+        jne click_route_selectShipType_ok3
+            jmp click_route_selectShipType_exit
+        click_route_selectShipType_ok3:
+        
+        ;
         mov game_tmp_shipSize, 3
         
         mov dx, 0
@@ -221,6 +235,11 @@ click_route_selectShipType proc
     cmp dh, 6
     jne click_route_selectShipType_1
     ; 2 cells
+        ; limit reached !
+        cmp ship_self_2_count, 0
+        je click_route_selectShipType_exit
+        
+        ;
         mov game_tmp_shipSize, 2
         
         mov dx, 0
@@ -245,6 +264,11 @@ click_route_selectShipType proc
     cmp dh, 8
     jne click_route_selectShipType_exit
     ; 1 cell
+        ; limit reached !
+        cmp ship_self_1_count, 0
+        je click_route_selectShipType_exit
+        
+        ;
         mov game_tmp_shipSize, 1
         
         mov dx, 0

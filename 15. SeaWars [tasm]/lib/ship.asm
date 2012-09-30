@@ -13,15 +13,17 @@
 
 
 ; Data
-ship_self_1_count   db 4
-ship_self_2_count   db 2
-ship_self_3_count   db 1
-ship_self_4_count   db 0
+ship_self_counts:
+    ship_self_4_count   db 4
+    ship_self_3_count   db 2
+    ship_self_2_count   db 1
+    ship_self_1_count   db 3
 
-ship_enemy_1_count  db 0
-ship_enemy_2_count  db 1
-ship_enemy_3_count  db 2
-ship_enemy_4_count  db 4
+ship_enemy_counts:
+    ship_enemy_4_count  db 0
+    ship_enemy_3_count  db 1
+    ship_enemy_2_count  db 2
+    ship_enemy_1_count  db 4
 
 
 ; Ship format:
@@ -154,6 +156,19 @@ ship_movTmpToArray proc
         lodsw
         stosw
     loop ship_movTmpToArray_loop
+    
+    ; --ship_self_*_count
+    push ax
+    push si
+        mov ax, 4
+        sub al, game_tmp_shipSize
+        lea si, ship_self_counts
+        add si, ax
+        mov ax, [si]
+        dec ax
+        mov [si], ax
+    pop si
+    pop ax
     
     ; ship_self_count++
     mov bl, ship_self_count

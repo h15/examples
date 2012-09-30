@@ -90,7 +90,7 @@ ui_shipCount proc
     ; Self
     mov dx, 0201h
     mov cx, 4
-    mov si, offset ship_self_1_count
+    lea si, ship_self_counts
     
     ui_shipCount_loop_self:
     push cx
@@ -128,7 +128,7 @@ ui_shipCount proc
     ; Enemy
     mov dx, 0229h
     mov cx, 4
-    mov si, offset ship_enemy_1_count
+    lea si, ship_enemy_counts
     
     ui_shipCount_loop_enemy:
     push cx
