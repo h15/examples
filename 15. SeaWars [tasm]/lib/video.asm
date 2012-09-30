@@ -29,6 +29,7 @@ video_font: ; Change font for nice pseudographic.
                 db 3 dup(1)
                 db 0ffh
     ship        db 8 dup(0ffh)
+    crude_ship  dw 4 dup(0101010110101010b)
 
 ; Install 2 video mod.
 ;
@@ -88,7 +89,7 @@ video_loadFont proc
     push offset video_font
     pop bp
     
-    mov cx, 6
+    mov cx, 7
     mov dx, 0
     mov bx, 0800h
     mov ax, 1100h

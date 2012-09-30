@@ -13,8 +13,8 @@
 
 ; DATA
 ui_border           db 0
-ui_border_sizeX     db 30
-ui_border_sizeY     db 16
+ui_border_sizeX     db 15
+ui_border_sizeY     db 15
 
 ; game field position
 ; (2nd field will draw with 40 cols offset)
@@ -28,6 +28,7 @@ ui_render proc
     call ui_render_border
     call ui_shipCount
     call ui_ships
+    call ui_tmp_ships
     ;call ui_testFont
     ret
 ui_render endp
@@ -264,74 +265,27 @@ ui_render_field endp
 ui_ships proc
     xor cx, cx
     mov cl, ship_self_count
-    lea si, ship_self
     
-    ; FOR ship_self
+    ; If ship-set is empty.
+    cmp cl, 0
+    je ui_ships_exit
+    
+    lea si, ship_self
+    push cs
+    pop  ds
+    
+    xor bx, bx  ; video mode
+    
+    shl cl, 2   ; 4 cells
     ui_ships_loop:
     push cx
-    push si
-        ; Get next ship.
-        add cx, cx
-        add si, cx
-        sub si, 2
-        mov ax, [si]
+        lodsw
+        mov dx, ax
         
-        ; Render this ship.
-        call ui_ships_render
-    pop si
-    pop cx
-    loop ui_ships_loop
-    
-    ret
-ui_ships endp
-
-
-; Render ship.
-; @param ax - ship
-;
-; +-+--+-----+--+-+-----+ 
-; |s|si|  Y  |di|L|  X  |  DWORD
-; +-+--+-----+--+-+-----+
-
-ui_ships_render proc
-    mov bx, ax
-    mov cx, bx
-    
-    and cx, 0110000000000000b ; size
-    shr cx, 13
-    and ax, 0000000011000000b ; direction
-    shr ax, 6
-    and bx, 0001111100011111b ; YX
-    
-    ui_ships_render_loop:
-    push cx
-    push ax
-    push bx
-        cmp ax, 0 ; north
-        jne ui_ships_render_loop_not_north
-            sub bx, 0100h
-            jmp ui_ships_render_loop_draw
-        ui_ships_render_loop_not_north:
+        cmp dx, 0
+        je ui_ships_loop_next
         
-        cmp ax, 1 ; east
-        jne ui_ships_render_loop_not_east
-            add bx, 0001h
-            jmp ui_ships_render_loop_draw
-        ui_ships_render_loop_not_east:
-        
-        cmp ax, 2 ; south
-        jne ui_ships_render_loop_not_south
-            add bx, 0100h
-            jmp ui_ships_render_loop_draw
-        ui_ships_render_loop_not_south:
-        
-            sub bx, 0001h; west
-            jmp ui_ships_render_loop_draw
-        
-        ui_ships_render_loop_draw:
-            mov dx, bx
             xor ax, ax
-            xor bx, bx  ; video mode
             mov ah, 2   ; set pos
             int 10h
 
@@ -340,11 +294,44 @@ ui_ships_render proc
             mov cx, 1
             int 10h
             
-        mov bx, dx
-    pop bx
-    pop ax
+        ui_ships_loop_next:
     pop cx
-    loop ui_ships_render_loop
+    loop ui_ships_loop
     
-    ret
-ui_ships_render endp
+    ui_ships_exit:
+        ret
+ui_ships endp
+
+ui_tmp_ships proc
+    xor cx, cx
+    mov cl, game_tmp_shipDone
+    
+    ; If ship is empty.
+    cmp cl, 0
+    je ui_tmp_ships_exit
+    
+    lea si, game_tmp_shipPos
+    push cs
+    pop  ds
+    
+    xor bx, bx  ; video mode
+    
+    ui_tmp_ships_loop:
+    push cx
+        lodsw
+        mov dx, ax
+        
+        xor ax, ax
+        mov ah, 2   ; set pos
+        int 10h
+
+        mov al, 6   ; draw al char
+        mov ah, 0ah
+        mov cx, 1
+        int 10h
+    pop cx
+    loop ui_tmp_ships_loop
+    
+    ui_tmp_ships_exit:
+        ret
+ui_tmp_ships endp

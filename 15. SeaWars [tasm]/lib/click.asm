@@ -116,9 +116,13 @@ click_route proc
 click_route endp
 
 click_route_selfField proc
+    ; Get mouse pos
     mov dh, mouse_status_position_y
     mov dl, mouse_status_position_x
+    
+    push dx
     call ship_isFieldFree
+    pop dx
     
     ; If cell is not free.
     cmp ax, 0
@@ -130,7 +134,7 @@ click_route_selfField proc
     mov ah, 2       ; set pos
     int 10h
     
-    mov al, 5       ; ship char
+    mov al, 6       ; ship char
     mov ah, 0ah     ; draw
     mov cx, 1
     int 10h
