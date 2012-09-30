@@ -39,11 +39,12 @@ main:
         ; Draw UserInterface.
         ; Also click events are here too.
         include lib/ui.asm
-        ; Ship "object"
+        ; Ship "object".
         include lib/ship.asm
         ; Click routing events.
         include lib/click.asm
-    ;   include lib/com.asm
+        ; Com-port interface.
+        include lib/com.asm
     ; Data.
         main_log_init db 'Init: DONE', 13,10,36
         main_log_exit db 'Exit: DONE', 13,10,36
@@ -55,6 +56,7 @@ main:
             call video_install
             call video_loadFont
             call mouse_install
+            call com_install
             
             mov ah, 9
             mov dx, offset main_log_init
@@ -108,7 +110,7 @@ main:
         pop cx
         pop bx
         pop ax
-    util_alToBuf endp	
+    util_alToBuf endp    
 
     ; Cipher -> Char
     util_toChr proc

@@ -167,6 +167,7 @@ click_route_enemyField endp
 ;
 ; 00h -> 10h -> 00h
 ;         \---> 20h
+
 click_route_selectShipType proc
     mov game_stage, 10h
     
