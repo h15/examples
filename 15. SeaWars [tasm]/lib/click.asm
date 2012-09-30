@@ -128,7 +128,9 @@ click_route_selfField proc
     cmp ax, 0
     je click_route_selfField_exit
     
+    push dx
     call ship_addShipCell
+    pop dx
     
     xor bx, bx
     mov ah, 2       ; set pos

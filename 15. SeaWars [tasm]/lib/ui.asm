@@ -276,7 +276,7 @@ ui_ships proc
     
     xor bx, bx  ; video mode
     
-    shl cl, 2   ; 4 cells
+    shl cl, 4   ; 4 cells
     ui_ships_loop:
     push cx
         lodsw

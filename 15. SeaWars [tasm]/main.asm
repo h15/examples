@@ -73,5 +73,53 @@ main:
             mov dx, offset main_log_exit
             int 21h
     ret
+
+    ;;
+    ;; UTILs
+    ;;
+
+    util_buf db '    ',13,10,36
+
+    ; ax -> buf
+    util_alToBuf proc
+        push ax
+        push bx
+        push cx
+        push dx
+        
+        lea si, util_buf
+        
+        mov cx, 4
+        util_alToBuf_loop:
+        push si
+            add si, cx
+            dec si
+            
+            mov dx, ax
+            and dx, 1111b
+            call util_toChr
+            mov [si], dl
+            
+            shr ax, 4
+        pop si
+        loop util_alToBuf_loop
+        
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+    util_alToBuf endp	
+
+    ; Cipher -> Char
+    util_toChr proc
+        cmp dx, 10
+        jl util_toChr_decim
+            sub dx, 10
+            add dx, 'a'
+            ret
+        util_toChr_decim:
+            add dx, '0'
+            ret
+    util_toChr endp
     
 end main
