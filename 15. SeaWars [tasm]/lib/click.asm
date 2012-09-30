@@ -182,14 +182,14 @@ click_route_selectShipType proc
         ;
         mov game_tmp_shipSize, 4
         
-        mov dx, 0
+        mov dx, offset game_message_shipSize
+        call game_message
+        
+        
+        mov dx, 000bh
         xor bx, bx
         mov ah, 2       ; set pos
         int 10h
-        
-        mov ah, 9
-        mov dx, offset game_message_shipSize
-        int 21h
         
         mov cx, 1
         mov dx, 000bh
@@ -213,14 +213,14 @@ click_route_selectShipType proc
         ;
         mov game_tmp_shipSize, 3
         
-        mov dx, 0
+        mov dx, offset game_message_shipSize
+        call game_message
+        
+        
+        mov dx, 000bh
         xor bx, bx
         mov ah, 2       ; set pos
         int 10h
-        
-        mov ah, 9
-        mov dx, offset game_message_shipSize
-        int 21h
         
         mov cx, 1
         mov dx, 000bh
@@ -242,14 +242,14 @@ click_route_selectShipType proc
         ;
         mov game_tmp_shipSize, 2
         
-        mov dx, 0
+        mov dx, offset game_message_shipSize
+        call game_message
+        
+        
+        mov dx, 000bh
         xor bx, bx
         mov ah, 2       ; set pos
         int 10h
-        
-        mov ah, 9
-        mov dx, offset game_message_shipSize
-        int 21h
         
         mov cx, 1
         mov dx, 000bh
@@ -271,14 +271,14 @@ click_route_selectShipType proc
         ;
         mov game_tmp_shipSize, 1
         
-        mov dx, 0
+        mov dx, offset game_message_shipSize
+        call game_message
+        
+        
+        mov dx, 000bh
         xor bx, bx
         mov ah, 2       ; set pos
         int 10h
-        
-        mov ah, 9
-        mov dx, offset game_message_shipSize
-        int 21h
         
         mov cx, 1
         mov dx, 000bh

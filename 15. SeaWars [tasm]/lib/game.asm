@@ -24,7 +24,11 @@ game_tmp_shipPos    dw 4 dup(0)
 ; 20 -> check ("show OK button")
 ; 30 -> OK pressed
 
+game_message_longEmptyString db '                                                                                $';
 game_message_shipSize db 'Ship type: $'
+game_message_shipSticksBorders db 'ERROR: Too much ships sticks border!$';
+game_message_shipAfloat db 'Ship afloat!$';
+game_message_shipWrongStruct db 'Ship must be solid and straight!$'
 
 
 ; Main Loop.
@@ -53,3 +57,37 @@ game_mainloop proc
     game_exit:
         ret
 game_mainloop endp
+
+
+; Print message to user
+; @param dx - offset of the message
+
+game_message proc
+    push bx
+    push ax
+    
+    push dx
+    xor dx, dx  ; pos
+    xor bh, bh  ; video mode
+    mov ah, 2   ; set pos func
+    int 10h
+    
+    ; clean up
+    lea dx, game_message_longEmptyString
+    mov ah, 9
+    int 21h
+    
+    xor dx, dx  ; pos
+    xor bh, bh  ; video mode
+    mov ah, 2   ; set pos func
+    int 10h
+    pop dx
+    
+    ; write message
+    mov ah, 9
+    int 21h
+    
+    pop ax
+    pop bx
+    ret
+game_message endp

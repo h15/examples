@@ -14,7 +14,7 @@
 
 ; Data
 ship_self_counts:
-    ship_self_4_count   db 4
+    ship_self_4_count   db 1
     ship_self_3_count   db 2
     ship_self_2_count   db 1
     ship_self_1_count   db 3
@@ -134,7 +134,14 @@ ship_movTmpToArray proc
     ; If tests failed - clean up and get out.
     call ship_check
     cmp ax, 1
-    jne ship_movTmpToArray_cleanup
+    je ship_movTmpToArray_checked
+    
+        lea dx, game_message_shipWrongStruct
+        call game_message
+        
+        jmp ship_movTmpToArray_cleanup
+    
+    ship_movTmpToArray_checked:
     
     push cs
     pop  ds
@@ -175,6 +182,10 @@ ship_movTmpToArray proc
     inc bl
     mov ship_self_count, bl
     
+    ; Print message to user
+    lea dx, game_message_shipAfloat
+    call game_message
+    
     ship_movTmpToArray_cleanup:
         ; Clean up
         mov game_tmp_shipSize, 0
@@ -188,6 +199,8 @@ ship_movTmpToArray proc
         loop ship_movTmpToArray_loop2
         
         mov game_stage, 00h
+    
+        call ship_movTmpToArray_afterHook
     
     ret
 ship_movTmpToArray endp
@@ -490,3 +503,107 @@ ship_check proc
     mov ax, 1
     ret
 ship_check endp
+
+
+; ship_movTmpToArray after-hook.
+; Look around!
+
+ship_movTmpToArray_afterHook proc
+    ;
+    ; Does all ships are installed?
+    ;
+    push cs
+    pop ds
+    lea si, ship_self_counts
+    mov cx, 4
+    ship_movTmpToArray_afterHook_loop:
+        lodsb
+        cmp al, 0
+        jne ship_movTmpToArray_afterHook_notEmpty
+    loop ship_movTmpToArray_afterHook_loop
+        ; Ship set is empty
+        mov game_stage, 20h
+        call ship_checkBorderSticked
+        ;call ui_showAcceptButton
+    ship_movTmpToArray_afterHook_notEmpty:
+    
+    ret
+ship_movTmpToArray_afterHook endp
+
+
+; Only half of ships can stay
+; near from border.
+; @return ax - 0|1
+
+ship_checkBorderSticked proc
+    ; Counter
+    xor bx, bx
+    
+    ; For ships
+    xor cx, cx
+    mov cl, ship_self_count
+    
+    push cx
+    ship_checkBorderSticked_loop:
+    push cx
+    push si
+        ; Get ship offset
+        dec cx
+        shl cx, 2
+        add si, cx
+        
+        ; For current-ship's cells
+        mov cx, 4
+        ship_checkBorderSticked_loop_loop:
+        push cx
+            dec cx
+            shl cx, 1
+            add si, cx
+            
+            mov dx, [si]
+            
+            ; Self field
+            mov ax, ui_border_offsetYX
+            mov cl, ui_border_sizeX
+            mov ch, ui_border_sizeY
+            add cx, ax
+            add ax, 0101h
+            
+            ; If one cell on border
+            ; - does not necessary check other.
+            cmp dl, al  ; left
+            je ship_checkBorderSticked_onBorder
+            cmp dl, cl  ; right
+            je ship_checkBorderSticked_onBorder
+            cmp dh, ah  ; top
+            je ship_checkBorderSticked_onBorder
+            cmp dh, ch  ; bottom
+            je ship_checkBorderSticked_onBorder
+        pop cx
+        loop ship_checkBorderSticked_loop_loop
+        ; Do "onBorder" code
+        ; or skip it.
+        jmp ship_checkBorderSticked_onBorder_end
+        ship_checkBorderSticked_onBorder:
+            pop cx
+            inc bx
+        ship_checkBorderSticked_onBorder_end:
+    pop si
+    pop cx
+    loop ship_checkBorderSticked_loop
+    pop cx
+    
+    ; 2*sticked > ship_self_count ?
+    shl bx, 1
+    cmp cx, bx
+    jge ship_checkBorderSticked_exit
+    
+        lea dx, game_message_shipSticksBorders
+        call game_message
+        
+        ; WIPE!!!
+        ;;call game_wipe
+    
+    ship_checkBorderSticked_exit:
+        ret
+ship_checkBorderSticked endp
