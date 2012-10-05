@@ -45,6 +45,7 @@ main:
         include lib/click.asm
         ; Com-port interface.
         include lib/com.asm
+        ;include lib/log.asm
     ; Data.
         main_log_init db 'Init: DONE', 13,10,36
         main_log_exit db 'Exit: DONE', 13,10,36
@@ -81,6 +82,7 @@ main:
         
         ; Init devices.
         main_init:
+            ;call log_install
             call hooks_install
             call video_install
             call video_loadFont
@@ -109,7 +111,7 @@ main:
     ;; UTILs
     ;;
 
-    util_buf db '    ',13,10,36
+    util_buf db '               ',13,10,36
 
     ; ax -> buf
     util_alToBuf proc

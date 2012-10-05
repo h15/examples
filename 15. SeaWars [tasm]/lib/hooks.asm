@@ -14,8 +14,8 @@
 
 
 hooks_int8_count    db 0
-hooks_int8_slow     dw 18   ; Speed of count change.
-                            ; Now is each 18 PIC tick.
+hooks_int8_slow     dw 10   ; Speed of count change.
+                            ; Second is each 18 PIC tick.
 
 
 ; HOOKS for INT 8 (timer)
