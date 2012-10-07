@@ -128,11 +128,19 @@ com_install proc
     pop es
 com_install endp
 
+
+; Get char from com-port.
+; @return al - byte from com-port
+
 com_get proc
     mov dx, com_base
     in al, dx
     ret
 com_get endp
+
+
+; Send char by com.
+; @param al - byte for sending
 
 com_send proc
     mov dx, com_base

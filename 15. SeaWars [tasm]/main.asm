@@ -44,7 +44,7 @@ main:
         ; Click routing events.
         include lib/click.asm
         ; Com-port interface.
-        include lib/com.asm
+        include lib/serial.asm
         ;include lib/log.asm
     ; Data.
         main_log_init db 'Init: DONE', 13,10,36
@@ -87,7 +87,7 @@ main:
             call video_install
             call video_loadFont
             call mouse_install
-            call com_install
+            call serial_install
             
             mov ah, 9
             mov dx, offset main_log_init
@@ -98,6 +98,7 @@ main:
         
         ; Back to dos default modes.
         main_exit:
+            call serial_uninstall
             call mouse_uninstall
             call video_uninstall
             call hooks_uninstall
