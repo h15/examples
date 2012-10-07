@@ -7,7 +7,8 @@ main:
     jmp main_1
     
     include ../lib/kbd.asm
-    include ../lib/com.asm
+    ;include ../lib/com.asm
+    include ../lib/com14h.asm
     include ../lib/hooks.asm
     include ../lib/video.asm
     

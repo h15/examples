@@ -7,7 +7,8 @@ main:
     jmp main_1
     
     include ../lib/kbd.asm
-    include ../lib/com.asm
+    ;include ../lib/com.asm
+    include ../lib/com14h.asm
     include ../lib/hooks.asm
     include ../lib/video.asm
     
@@ -34,9 +35,9 @@ main_1:
         
         ; One time per game "second".
         ;
-        mov ax, game_curTime
+        mov cx, game_curTime
         mov bx, game_seconds
-        cmp ax, bx
+        cmp cx, bx
         je game_mainloop_second_skip
             mov game_curTime, bx
             
@@ -47,8 +48,8 @@ main_1:
             ;call game_log
             
             call com_get
-            lea dx, log_message_get
-            call game_log
+            ;lea dx, log_message_get
+            ;call game_log
             
             call util_alToBuf
             lea dx, util_buf
