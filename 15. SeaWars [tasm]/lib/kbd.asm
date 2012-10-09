@@ -18,6 +18,10 @@ kbd_buffer_start    db 0
 kbd_buffer_end      db 0
 kbd_buffer_isEmpty  db 1
 
+kbd_keyChars1	db 'qwertyuiop'
+kbd_keyChars2	db 'asdfghjkl'
+kbd_keyChars3	db 'zxcvbnm'
+
 ; kbd_buffer -> reg AL
 ;
 ; Shift one byte from buffer to AL.

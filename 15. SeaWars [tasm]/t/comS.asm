@@ -54,9 +54,9 @@ Save_ok:
 	jmp	Input	
 
 ;Пpишло сообщение!!                   
-Incoming:  
-	call serial_get
-    jmp	Input
+;Incoming:  
+;   call serial_get
+;   jmp	Input
 
 Print	db	0dh,0ah,'COM2>',24h
 

@@ -23,16 +23,30 @@ click_route proc
     
     ; Which zone were clicked?
     ; Zones:
+    ;	- My Name;
     ;   - Self game field;
     ;   - Enemy's game field;
     ;   - My ships.
+    
+    
+    ; ANY STAGE
+    ; My Name
+        cmp dh, 3
+        jne click_route_notName
+        cmp dl, 19h
+        jl click_route_notName
+        cmp dl, 23h
+        jg click_route_notName
+        ; ACTION
+        call click_route_changeName
+        jmp click_route_exit
     
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;
     ;;  STAGE 10h
     ;;
-    
+    click_route_notName:
     ; Self field
         mov ax, ui_border_offsetYX
         mov bl, ui_border_sizeX
@@ -57,7 +71,7 @@ click_route proc
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;
-    ;;  STAGE 50h
+    ;;  STAGE 0F4h
     ;;
     
     click_route_not_self:
@@ -76,7 +90,9 @@ click_route proc
         jle click_route_not_enemy
         cmp dh, bh  ; bottom
         jg click_route_not_enemy
-        cmp game_stage, 50h
+        cmp game_stage, 0F4h
+        jne click_route_not_enemy
+        cmp action_fight, 1
         jne click_route_not_enemy
         
         ; ACTION
@@ -144,20 +160,6 @@ click_route_selfField proc
     click_route_selfField_exit:
     ret
 click_route_selfField endp
-
-click_route_enemyField proc
-    ; inside
-    xor bx, bx
-    mov ah, 2       ; set pos
-    int 10h
-    
-    mov al, 4       ; miss char
-    mov ah, 0ah     ; draw
-    mov cx, 1
-    int 10h
-    
-    ret
-click_route_enemyField endp
 
 
 ; STAGE 00h
@@ -298,3 +300,142 @@ click_route_selectShipType endp
 click_flushStatus proc
     ret
 click_flushStatus endp
+
+
+click_route_changeName proc
+	xor cx, cx
+	mov dx, 0319h
+	mov ah, 2
+	int 10h
+	
+	mov cl, ui_user_selfName_len
+	cmp cl, 0
+	je click_route_changeName_newName
+	
+	; Clean up
+	click_route_changeName_loop:
+		mov dl, 20h
+		mov ah, 2
+		int 21h
+		
+		inc si
+	loop click_route_changeName_loop
+	
+	mov ui_user_selfName_len, 0
+	
+	lea si, ui_user_selfName_str
+	
+	; Make new name
+	click_route_changeName_newName:
+		call kbd_shiftKey ; Done when enter pressed
+		cmp al, 1ch
+		je click_route_changeName_exit
+		
+		cmp al, 0
+		je click_route_changeName_newName ; 0 byte means empty kbd
+		
+		
+		cmp al, 10h
+		jl click_route_changeName_newName
+		cmp al, 19h
+		jg click_route_changeName_newName_not1L
+			; 1st kbd line (qwerty...)
+			push si
+			lea si, kbd_keyChars1
+			sub al, 10h 
+			xor ah, ah
+			add si, ax
+			mov al, [si]
+			pop si
+			jmp click_route_changeName_newName_saveChar
+		click_route_changeName_newName_not1L:
+		
+		
+		cmp al, 1eh
+		jl click_route_changeName_newName
+		cmp al, 26h
+		jg click_route_changeName_newName_not2L
+			; 2nd kbd line (asdf...)
+			push si
+			lea si, kbd_keyChars2
+			sub al, 1eh 
+			xor ah, ah
+			add si, ax
+			mov al, [si]
+			pop si
+			jmp click_route_changeName_newName_saveChar
+		click_route_changeName_newName_not2L:
+		
+		
+		cmp al, 2ch
+		jl click_route_changeName_newName
+		cmp al, 32h
+		jg click_route_changeName_newName
+			; 3rd kbd line (zxc...)
+			push si
+			lea si, kbd_keyChars3
+			sub al, 2ch 
+			xor ah, ah
+			add si, ax
+			mov al, [si]
+			pop si
+		
+		
+		click_route_changeName_newName_saveChar:
+			mov [si], al
+			inc si
+			inc ui_user_selfName_len
+			mov bl, ui_user_selfName_len
+			cmp bl, 10
+			je click_route_changeName_exit ; 10 letters are enought
+		
+	jmp click_route_changeName_newName
+		
+	click_route_changeName_exit:
+		; Push change name command to buffer.
+		mov al, 0b1h	; command code
+		call serial_alToBuf
+		mov al, ui_user_selfName_len
+		call serial_alToBuf
+		
+		xor cx, cx
+		mov cl, ui_user_selfName_len
+		lea si, ui_user_selfName_str
+		
+		cmp cl, 0
+		je click_route_changeName_pushStr_end
+		
+		click_route_changeName_pushStr:
+			mov al, [si]
+			call serial_alToBuf
+			inc si
+		loop click_route_changeName_pushStr
+		click_route_changeName_pushStr_end:
+	
+		ret
+click_route_changeName endp
+
+
+click_route_enemyField proc
+	mov ax, ui_border_offsetYX
+	mov bl, ui_border_sizeX
+	mov bh, ui_border_sizeY
+	add bx, ax
+	add bx, 40
+	
+	mov action_attack_cell, dx
+	
+	sub bx, 0101h
+	sub dx, bx ; get "local" X,Y
+	
+	mov al, 0C0h
+	call serial_alToBuf
+	mov al, dl
+	call serial_alToBuf
+	mov al, dh
+	call serial_alToBuf
+	
+	call serial_send
+    
+	ret
+click_route_enemyField endp

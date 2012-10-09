@@ -14,16 +14,16 @@
 
 ; Data
 ship_self_counts:
-    ship_self_4_count   db 1
-    ship_self_3_count   db 2
-    ship_self_2_count   db 1
-    ship_self_1_count   db 3
+    ship_self_4_count   db 22
+    ship_self_3_count   db 22
+    ship_self_2_count   db 22
+    ship_self_1_count   db 22
 
 ship_enemy_counts:
     ship_enemy_4_count  db 0
-    ship_enemy_3_count  db 1
-    ship_enemy_2_count  db 2
-    ship_enemy_1_count  db 4
+    ship_enemy_3_count  db 0
+    ship_enemy_2_count  db 0
+    ship_enemy_1_count  db 0
 
 
 ; Ship format:
@@ -41,6 +41,8 @@ ship_self_count db 0
 ship_self       dd 100 dup(0) ; 50 ships
 ship_enemy      dd 100 dup(0) ; 50 ships
 
+ship_attack 	dw 100 dup(0) ; YX
+ship_miss 		dw 100 dup(0) ; YX
 
 ; Check field's cell for free.
 ; @param dx - YX
@@ -523,7 +525,9 @@ ship_movTmpToArray_afterHook proc
     loop ship_movTmpToArray_afterHook_loop
         ; Ship set is empty
         mov game_stage, 20h
-        call ship_checkBorderSticked
+        
+        call action_shipsAfloats
+        ;call ship_checkBorderSticked
         ;call ui_showAcceptButton
     ship_movTmpToArray_afterHook_notEmpty:
     

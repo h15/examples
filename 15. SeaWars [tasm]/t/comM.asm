@@ -22,6 +22,7 @@ Input_:
 	int 16h
 	cmp	ah, 1
     jne ok
+        call print_buf
         call serial_uninstall
         ret
     ok:
@@ -37,23 +38,27 @@ Input_:
 	mov	dl, al
 	int 21h
 	
-	inc	serial_bufCount
+    call serial_alToBuf
 	
-	mov	bx, [serial_bufPtr]
-	mov	[bx], al
-	inc	bx
-	cmp	bx, offset serial_buf + serial_bufSize
-	jb	Save_ok
-	mov	bx, offset serial_buf
-Save_ok:
-	mov	serial_bufPtr, bx
-	
-	jmp	Input	
+	jmp	Input
+
+print_buf proc
+    lea si, serial_recvBuf
+    mov cx, serial_recvCount
+    mov ah, 02h
+    print_buf_while:
+        mov dl, [si]
+        int 21h
+        inc si
+    loop print_buf_while
+    
+    ret
+print_buf endp
 
 ;Пpишло сообщение!!                   
-Incoming:  
-	call serial_get
-    jmp	Input
+;Incoming:  
+;   call serial_get
+;   jmp	Input
 
 Print	db	0dh,0ah,'COM2>',24h
 

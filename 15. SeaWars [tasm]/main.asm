@@ -46,6 +46,7 @@ main:
         ; Com-port interface.
         include lib/serial.asm
         ;include lib/log.asm
+        include lib/action.asm
     ; Data.
         main_log_init db 'Init: DONE', 13,10,36
         main_log_exit db 'Exit: DONE', 13,10,36
@@ -73,11 +74,11 @@ main:
         ret
         
         main_runAsSlave:
-            mov com_type, 0
+            mov serial_type, 0
             jmp main_init
         
         main_runAsMaster:
-            mov com_type, 1
+            mov serial_type, 1
             jmp main_init
         
         ; Init devices.
@@ -98,7 +99,7 @@ main:
         
         ; Back to dos default modes.
         main_exit:
-            call serial_uninstall
+            ;call serial_uninstall
             call mouse_uninstall
             call video_uninstall
             call hooks_uninstall

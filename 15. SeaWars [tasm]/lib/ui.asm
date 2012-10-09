@@ -13,12 +13,18 @@
 
 ; DATA
 ui_border           db 0
-ui_border_sizeX     db 15
-ui_border_sizeY     db 15
+ui_border_sizeX     db 2
+ui_border_sizeY     db 2
 
 ; game field position
 ; (2nd field will draw with 40 cols offset)
 ui_border_offsetYX  dw 0108h
+
+ui_user_selfName_len  db 6
+ui_user_selfName_str  db 'NoName          '
+
+ui_user_enemyName_len db 6
+ui_user_enemyName_str db 'NoName          '
 
 
 ; Draw user interface.
@@ -30,8 +36,108 @@ ui_render proc
     call ui_ships
     call ui_tmp_ships
     ;call ui_testFont
+    call ui_userNames
+    call ui_attacks
     ret
 ui_render endp
+
+ui_attacks proc
+	mov ax, ui_border_offsetYX
+	mov bl, ui_border_sizeX
+	mov bh, ui_border_sizeY
+	add bx, ax
+	add bx, 40
+	
+	; ATTACK
+	
+	lea si, ship_attack
+	mov cx, 100
+	ui_attacks_attacks:
+	push bx
+		mov dx, [si]
+		cmp dx, 0
+		je ui_attacks_attacks_next
+			add dx, bx
+			
+			mov ah, 2   ; set pos
+			xor bx, bx
+			int 10h
+			mov ah, 0ah   ; draw
+			mov al, 6
+			mov cx, 1
+			int 10h
+    ui_attacks_attacks_next:
+    pop bx
+	loop ui_attacks_attacks
+	
+	; MISS
+	
+	lea si, ship_miss
+	mov cx, 100
+	ui_attacks_miss:
+	push bx
+		mov dx, [si]
+		cmp dx, 0
+		je ui_attacks_miss_next
+			add dx, bx
+			
+			mov ah, 2   ; set pos
+			xor bx, bx
+			int 10h
+			mov ah, 0ah   ; draw
+			mov al, 4
+			mov cx, 1
+			int 10h
+    ui_attacks_miss_next:
+    pop bx
+	loop ui_attacks_miss
+	
+	
+	ret
+ui_attacks endp
+
+ui_userNames proc
+	xor cx, cx
+	
+	mov dx, 0319h
+	mov ah, 2
+	int 10h
+	
+	lea si, ui_user_selfName_str
+	mov cl, ui_user_selfName_len
+	cmp cl, 0
+	je ui_userNames_enemy
+	
+	ui_userNames_self_loop:
+		mov dl, [si]
+		mov ah, 2
+		int 21h
+		
+		inc si
+	loop ui_userNames_self_loop
+	
+	ui_userNames_enemy:
+		; enemy
+		mov dx, 0341h
+		mov ah, 2
+		int 10h
+		
+		lea si, ui_user_enemyName_str
+		mov cl, ui_user_enemyName_len
+		cmp cl, 0
+		je ui_userNames_exit
+		
+		ui_userNames_enemy_loop:
+			mov dl, [si]
+			mov ah, 2
+			int 21h
+			
+			inc si
+		loop ui_userNames_enemy_loop
+		
+	ui_userNames_exit:
+		ret
+ui_userNames endp
 
 
 ; Test font.
