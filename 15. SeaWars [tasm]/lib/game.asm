@@ -40,7 +40,8 @@ game_tmp_shipPos    dw 4 dup(0)
 ; 9 - партия окончена
 
 
-game_message_longEmptyString    db '                                                                                $';
+game_message_longEmptyString:
+  db '                                                                                $';
 game_message_longEmptyString40  db '                                        $';
 game_message_shipSize           db 'Ship type: $'
 game_message_shipSticksBorders  db 'ERROR: Too much ships sticks border!$';
@@ -88,8 +89,8 @@ game_mainloop proc
         je game_mainloop_second_skip
             mov game_curTime, bx
             
-            lea dx, game_message_longEmptyString40
-            call game_log
+            ;lea dx, game_message_longEmptyString40
+            ;call game_log
             ; Action.
             call ui_render
             call action_dispatch
@@ -183,7 +184,14 @@ game_log proc
 game_log endp
 
 
+; Enter game params:
+;   - field size;
+;   - count of 4-cells ships;
+;   ...
+;   - count of 1-cells ships;
+;
 ; @param al - kbd key code 2 .. 0Bh
+
 game_stage1 proc
 	; Does key pressed ?
 	cmp al, 2

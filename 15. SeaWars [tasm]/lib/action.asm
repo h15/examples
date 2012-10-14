@@ -1,4 +1,18 @@
 
+; Action
+;
+; Do something when enemy sends command.
+; It's part of SeaWars game.
+;
+; Tasm file.
+; Charset cp1251.
+;
+; Copyright (C) 2012, Georgy Bazhukov.
+;
+; This program is free software, you can redistribute it and/or modify it under
+; the terms of the Artistic License version 2.0.
+
+
 action_status   db 0 ; 0 - send, 1 - get
 action_isOnline db 0
 action_message  db 'Another user connected!$'
@@ -8,6 +22,8 @@ action_slaveReady   db 0
 
 action_fight        db 0 ; does it my round?
 action_attack_cell  dw 0
+
+action_lastSerialSendTime dw 0
 
 ; Get message from other side / send delayed message.
 action_dispatch proc
@@ -26,27 +42,39 @@ action_dispatch endp
 
 action_sendMessage proc
     inc action_status
+    
     mov ax, serial_bufCount
     cmp ax, 0
     je action_sendMessage_sync
         ; Buffer is not empty.
         call serial_send
         ret
+    
     action_sendMessage_sync:
-        ; Buffer is empty
+        mov bx, action_lastSerialSendTime
+        mov ax, game_curTime    ; Send sync only if other commands did not send
+        cmp bx, ax              ; in this time period AND ->
+        jge action_sendMessage_sync_exit
+        mov ax, serial_bufCount
+        cmp ax, 0
+        jg action_sendMessage_sync_exit ; -> if bufCount = 0
         
-        mov al, serial_type
-        cmp al, 0
-        je action_sendMessage_sync_slave
-            mov al, 0AAh    ; ping
-            call serial_alToBuf
-            call serial_send
-            ret
-        action_sendMessage_sync_slave:
-            mov al, 01h     ; pong
-            call serial_alToBuf
-            call serial_send
-            ret
+            ; Buffer is empty.
+            mov al, serial_type
+            cmp al, 0
+            je action_sendMessage_sync_slave
+                mov al, 0AAh    ; ping
+                call serial_alToBuf
+                call serial_send
+                ret
+            action_sendMessage_sync_slave:
+                mov al, 01h     ; pong
+                call serial_alToBuf
+                call serial_send
+                ret
+    
+    action_sendMessage_sync_exit:
+        ret
 action_sendMessage endp
 
 action_getMessage proc
@@ -58,7 +86,11 @@ action_getMessage proc
         jmp action_getMessage_exit
     action_getMessage_skip:
     
-    ; Online
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;
+    ;; Online
+    ;;
+    
     mov bl, action_isOnline
     cmp bl, 0
     jne action_getMessage_getCmd
@@ -70,6 +102,16 @@ action_getMessage proc
         je action_getMessage_slave
             lea dx, game_message_fieldSize
             call game_message
+            
+            mov al, 0a1h
+            call serial_alToBuf ; SEND SEND SEND A1!!!!!
+            call serial_alToBuf
+            call serial_alToBuf
+            call serial_alToBuf
+            call serial_alToBuf
+            call serial_alToBuf
+            call serial_send
+            
             jmp action_getMessage_slave_end
         action_getMessage_slave:
             lea dx, game_message_waitGameParams
@@ -90,35 +132,94 @@ action_getMessage proc
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
     cmp al, 0aah ; ping
-    je action_getMessage_exit
+    jne action_getMessage11
+        jmp action_getMessage_exit
+    action_getMessage11:
+    
     cmp al, 01h  ; pong
-    je action_getMessage_exit
+    jne action_getMessage12
+        jmp action_getMessage_exit
+    action_getMessage12:
+    
     cmp al, 0b1h ; change name
     jne action_getMessage_1
         call action_changeEnemysName
         jmp action_getMessage_exit
     action_getMessage_1:
+    
     cmp al, 01bh ; name changed (who cares?)
-    je action_getMessage_exit
-    cmp al, 0b2h
+    jne action_getMessage_13
+        jmp action_getMessage_exit
+    action_getMessage_13:
+    
+    cmp al, 0b2h    ; Get game params
     jne action_getMessage_2
         call action_recvGameParams
+        
+        mov ax, 0efefh
+        call util_alToBuf
+        lea dx, util_buf
+        call game_log
+        
         jmp action_getMessage_exit
     action_getMessage_2:
+    
+    cmp al, 2bh ; Ok(game params) from enemy
+    jne action_getMessage10
+        mov ax, 0eeeeh
+        call util_alToBuf
+        lea dx, util_buf
+        call game_log
+        
+        mov al, 0a2h
+        call serial_alToBuf ; SEND SEND SEND A2!!!!!
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_send
+        
+        jmp action_getMessage_exit
+    action_getMessage10:
+    
     cmp al, 0a3h
     jne action_getMessage_3
         mov action_masterReady, 1
+        
+        mov al, 3ah
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_send
+        
         call action_checkSelf
         jmp action_getMessage_exit
     action_getMessage_3:
+    
     cmp al, 0a4h
     jne action_getMessage_4
         mov game_stage, 0F4h
+        
+        mov al, 4ah
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_send
+        
         lea dx, game_message_fight
         call game_message
         mov action_fight, 1
         jmp action_getMessage_exit
     action_getMessage_4:
+    
+    cmp al, 4ah
+    jne action_getMessage_14
+        
+    action_getMessage_14:
+    
     cmp al, 0C0h
     jne action_getMessage_5
         call action_attack
@@ -184,19 +285,11 @@ action_syncPong endp
 
 
 action_changeEnemysName proc
-    ;mov ax, 0abcdh
-    ;call util_alToBuf
-    ;lea dx, util_buf
-    ;call game_log
     lea si, serial_recvBuf
     inc si
     
     xor cx, cx
     mov cl, [si]
-    ;mov ax, cx
-    ;call util_alToBuf
-    ;lea dx, util_buf
-    ;call game_message
     
     cmp cl, 0
     je action_changeEnemysName_exit
@@ -243,6 +336,8 @@ action_changeEnemysName endp
 ; передача параметров игры (размер поля и количество кораблей)
 
 action_sendGameParams proc
+    nop ; WAIT
+    
     mov al, 0b2h
     call serial_alToBuf
     mov al, ui_border_sizeX
@@ -270,6 +365,11 @@ action_sendGameParams proc
     ret
 action_sendGameParams endp
 
+
+; B2 gotcha! Setup game params,
+; send answer 2B.
+;
+; @param si - ref to command data.
 
 action_recvGameParams proc
     mov al, 02bh
@@ -327,6 +427,10 @@ action_shipsAfloats proc
             mov al, 0a4h
             
             call serial_alToBuf
+            call serial_alToBuf
+            call serial_alToBuf
+            call serial_alToBuf
+            call serial_alToBuf
             call serial_send
             
             mov game_stage, 0F4h
@@ -350,6 +454,9 @@ action_checkSelf proc
         mov action_masterReady, 1
         mov al, 0a4h
         
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_alToBuf
         call serial_alToBuf
         call serial_send
         

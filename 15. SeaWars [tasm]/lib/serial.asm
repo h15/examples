@@ -24,7 +24,7 @@ serial_int_sts      db  0
 serial_overrun      db  0
 serial_income	    db	0	            ; флаг пpиема
 serial_bufPtr	    dw	serial_buf		
-serial_bufCount	    dw	0
+serial_bufCount	    dw	1
 serial_bufSize      equ 1024            ; pазмеp буфеpа
 serial_buf          db  serial_bufSize + 2 dup (?)
 serial_source       db  serial_bufSize + 2 dup (?)
@@ -95,17 +95,27 @@ serial_int:
             add si, serial_recvCount
             mov [si], al
             inc serial_recvCount
+            
             mov ax, serial_recvCount
-            call util_alToBuf
-            lea dx, util_buf
-            call game_log
+            cmp ax, 1
+            je serial_int_cprint_end
+                call util_alToBuf
+                lea dx, util_buf
+                call game_log
+            serial_int_cprint_end:
         pop ax
         pop si
         
-        ;print
-        call util_alToBuf
-        lea dx, util_buf
-        call game_log
+        ; Print.
+        ; Do not print sync.
+        cmp al, 0aah
+        je serial_int_print_end
+        cmp al, 1
+        je serial_int_print_end
+            call util_alToBuf
+            lea dx, util_buf
+            call game_log
+        serial_int_print_end:
         
         inc serial_srcPtr   ; и обновляем счетчики
         inc bx
@@ -235,6 +245,8 @@ serial_send proc
 	loop serial_send_letter
 
 	mov	serial_bufCount, 0
+    mov ax, game_seconds
+    mov action_lastSerialSendTime, ax ; save time
     
     ret
 serial_send endp
