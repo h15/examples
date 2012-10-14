@@ -31,6 +31,8 @@ serial_source       db  serial_bufSize + 2 dup (?)
 
 serial_recvCount    dw  0
 serial_recvBuf      db  serial_bufSize + 2 dup (?)
+serial_recvStart    dw  0
+serial_recvEnd      dw  0
 
 ; On COM1 INT
 serial_int:
@@ -91,18 +93,19 @@ serial_int:
         ; Save
         push si
         push ax
-            lea si, serial_recvBuf
-            add si, serial_recvCount
-            mov [si], al
+            call serial_alToRecvBuf
+            ;lea si, serial_recvBuf
+            ;add si, serial_recvCount
+            ;mov [si], al
             inc serial_recvCount
             
-            mov ax, serial_recvCount
-            cmp ax, 1
-            je serial_int_cprint_end
-                call util_alToBuf
-                lea dx, util_buf
-                call game_log
-            serial_int_cprint_end:
+            ;mov ax, serial_recvCount
+            ;cmp ax, 1
+            ;je serial_int_cprint_end
+            ;    call util_alToBuf
+            ;    lea dx, util_buf
+            ;    call game_log
+            ;serial_int_cprint_end:
         pop ax
         pop si
         
@@ -115,7 +118,47 @@ serial_int:
             call util_alToBuf
             lea dx, util_buf
             call game_log
+        
+            ;
+            ; SYNC SKIP ON NOT SYNC BYTE
+            ;
+            mov action_sync_skip, 4
         serial_int_print_end:
+        
+        
+        ;
+        ; Response-on-fly
+        ;
+        push ax
+        cmp al, 2bh
+        jne serial_int_2bh
+            mov al, 0a2h
+            call serial_alToBuf
+            call serial_send
+        serial_int_2bh:
+        
+        cmp al, 0a4h
+        jne serial_int_0a4h
+            mov action_masterReady, 1
+            mov action_slaveReady, 1
+            mov game_stage, 2fh
+            
+            mov al, 04ah
+            call serial_alToBuf
+            call serial_send
+        serial_int_0a4h:
+        
+        cmp al, 0a1h
+        jne serial_int_0a1h
+            mov al, 01ah
+            call serial_alToBuf
+            call serial_send
+        serial_int_0a1h:
+        pop ax
+        
+        
+        
+        
         
         inc serial_srcPtr   ; и обновляем счетчики
         inc bx
@@ -337,3 +380,51 @@ serial_alToBuf proc
     
     ret
 serial_alToBuf endp
+
+
+serial_alToRecvBuf proc
+    push si
+    push ax
+    
+    cmp serial_recvEnd, 1024
+    jne serial_alToRecvBuf_toNull
+        mov serial_recvEnd, 0
+    serial_alToRecvBuf_toNull:
+    
+    lea si, serial_recvBuf
+    add si, serial_recvEnd
+    mov [si], al
+    
+    mov ax, serial_recvEnd
+    inc ax
+    mov serial_recvEnd, ax
+    
+    pop ax
+    pop si
+    
+    ret
+serial_alToRecvBuf endp
+
+
+serial_recvBufToAl proc
+    push si
+    
+    cmp serial_recvStart, 1024
+    jne serial_RecvBufToAl_toNull
+        mov serial_recvStart, 0
+    serial_RecvBufToAl_toNull:
+    
+    lea si, serial_recvBuf
+    add si, serial_recvStart
+    mov al, [si]
+    
+    push ax
+        mov ax, serial_recvStart
+        inc ax
+        mov serial_recvStart, ax
+    pop ax
+    
+    pop si
+    
+    ret
+serial_recvBufToAl endp

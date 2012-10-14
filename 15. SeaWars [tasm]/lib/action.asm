@@ -23,6 +23,8 @@ action_slaveReady   db 0
 action_fight        db 0 ; does it my round?
 action_attack_cell  dw 0
 
+action_sync_skip    db 0
+
 action_lastSerialSendTime dw 0
 
 ; Get message from other side / send delayed message.
@@ -59,27 +61,36 @@ action_sendMessage proc
         cmp ax, 0
         jg action_sendMessage_sync_exit ; -> if bufCount = 0
         
-            ; Buffer is empty.
-            mov al, serial_type
+            ; SKIP SYNC on demand.
+            mov al, action_sync_skip
             cmp al, 0
-            je action_sendMessage_sync_slave
-                mov al, 0AAh    ; ping
-                call serial_alToBuf
-                call serial_send
-                ret
-            action_sendMessage_sync_slave:
-                mov al, 01h     ; pong
-                call serial_alToBuf
-                call serial_send
-                ret
-    
+            jne action_sendMessage_sync_dec
+            
+                
+                ; Buffer is empty.
+                mov al, serial_type
+                cmp al, 0
+                je action_sendMessage_sync_slave
+                    mov al, 0AAh    ; ping
+                    call serial_alToBuf
+                    call serial_send
+                    ret
+                action_sendMessage_sync_slave:
+                    mov al, 01h     ; pong
+                    call serial_alToBuf
+                    call serial_send
+                    ret
+            action_sendMessage_sync_dec:
+                dec al
+                mov action_sync_skip, al
+                
     action_sendMessage_sync_exit:
         ret
 action_sendMessage endp
 
 action_getMessage proc
     dec action_status
-    lea si, serial_recvBuf
+    ;lea si, serial_recvBuf
     mov cx, serial_recvCount
     cmp cx, 0
     jne action_getMessage_skip
@@ -122,8 +133,9 @@ action_getMessage proc
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     action_getMessage_getCmd:
-        mov al, [si] ; get command
-        inc si
+        call serial_recvBufToAl
+    ;    mov al, [si] ; get command
+    ;    inc si
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;
@@ -198,6 +210,12 @@ action_getMessage proc
         jmp action_getMessage_exit
     action_getMessage_3:
     
+    cmp al, 3ah
+    jne action_getMessage_15
+        mov action_masterReady, 1
+        jmp action_getMessage_exit
+    action_getMessage_15:
+    
     cmp al, 0a4h
     jne action_getMessage_4
         mov game_stage, 0F4h
@@ -217,7 +235,12 @@ action_getMessage proc
     
     cmp al, 4ah
     jne action_getMessage_14
+        mov action_slaveReady, 1
+        mov game_stage, 0F4h
+        lea dx, game_message_fight
+        call game_message
         
+        jmp action_getMessage_exit
     action_getMessage_14:
     
     cmp al, 0C0h
@@ -285,11 +308,8 @@ action_syncPong endp
 
 
 action_changeEnemysName proc
-    lea si, serial_recvBuf
-    inc si
-    
-    xor cx, cx
-    mov cl, [si]
+    call serial_recvBufToAl
+    mov cl, al
     
     cmp cl, 0
     je action_changeEnemysName_exit
@@ -316,14 +336,12 @@ action_changeEnemysName proc
     pop si
     
     ; Set new name
-    inc si
     mov ui_user_enemyName_len, cl
     lea di, ui_user_enemyName_str
     
     action_changeEnemysName_loop1:
-        mov al, [si]
+        call serial_recvBufToAl
         mov [di], al
-        inc si
         inc di
     loop action_changeEnemysName_loop1
     
@@ -375,31 +393,27 @@ action_recvGameParams proc
     mov al, 02bh
     call serial_alToBuf
     
-    mov al, [si]
+    call serial_recvBufToAl
     call serial_alToBuf
     mov ui_border_sizeX, al
     mov ui_border_sizeY, al
     
-    inc si
-    mov al, [si]
+    call serial_recvBufToAl
     call serial_alToBuf
     and al, 1111b
     mov ship_self_4_count, al
     
-    inc si
-    mov al, [si]
+    call serial_recvBufToAl
     call serial_alToBuf
     and al, 1111b
     mov ship_self_3_count, al
     
-    inc si
-    mov al, [si]
+    call serial_recvBufToAl
     call serial_alToBuf
     and al, 1111b
     mov ship_self_2_count, al
     
-    inc si
-    mov al, [si]
+    call serial_recvBufToAl
     call serial_alToBuf
     and al, 1111b
     mov ship_self_1_count, al
@@ -418,12 +432,13 @@ action_recvGameParams endp
 action_shipsAfloats proc
     cmp serial_type, 1
     je action_shipsAfloats_master
+    ; Slave
+        mov action_slaveReady, 1
+        
         cmp action_masterReady, 1
         je action_shipsAfloats_sendReady
-            mov action_slaveReady, 1
             ret
         action_shipsAfloats_sendReady:
-            mov action_masterReady, 1
             mov al, 0a4h
             
             call serial_alToBuf
@@ -439,9 +454,14 @@ action_shipsAfloats proc
             
             ret
     action_shipsAfloats_master:
+    ; Master
         mov action_masterReady, 1
         mov al, 0a3h
         
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_alToBuf
         call serial_alToBuf
         call serial_send
         
@@ -470,9 +490,10 @@ action_checkSelf endp
 
 ; We are under attack!
 action_attack proc
-    mov dl, [si]
-    inc si
-    mov dh, [si]
+    call serial_recvBufToAl
+    mov dl, al
+    call serial_recvBufToAl
+    mov dh, al
     
 	mov ax, ui_border_offsetYX
 	mov bl, ui_border_sizeX

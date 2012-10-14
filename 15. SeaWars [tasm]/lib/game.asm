@@ -94,6 +94,8 @@ game_mainloop proc
             ; Action.
             call ui_render
             call action_dispatch
+            call game_checkState
+            
             ;call com_action_recvCmd
             ;call com_action_sendSync
         game_mainloop_second_skip:
@@ -106,6 +108,25 @@ game_mainloop proc
     game_exit:
         ret
 game_mainloop endp
+
+
+game_checkState proc
+	mov al, game_stage
+	cmp al, 30h
+	jg game_checkState_exit
+		mov al, action_masterReady
+		cmp al, 1
+		jne game_checkState_exit
+			mov al, action_slaveReady
+			cmp al, 1
+			jne game_checkState_exit
+				mov game_stage, 0F4h
+				lea dx, game_message_fight
+				call game_message
+		
+	game_checkState_exit:
+		ret
+game_checkState endp
 
 
 ; Print message to user
