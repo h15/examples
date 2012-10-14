@@ -154,6 +154,13 @@ serial_int:
             call serial_alToBuf
             call serial_send
         serial_int_0a1h:
+        
+        cmp al, 0aah
+        jne serial_int_0aah
+            mov al, 01h
+            call serial_alToBuf
+            call serial_send
+        serial_int_0aah:
         pop ax
         
         
