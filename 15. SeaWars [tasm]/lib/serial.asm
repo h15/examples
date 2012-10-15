@@ -90,9 +90,21 @@ serial_int:
         mov bx, serial_srcPtr ; заносим символ в буфеp
         mov [bx], al
         
+        
         ; Save
         push si
         push ax
+            ;
+            ; Flush recv-queue on important commands.
+            ;
+            ;cmp al, 0Ch
+            ;jne serial_int_dontFlush
+            ;cmp al, 0C0h
+            ;jne serial_int_dontFlush
+            ;    call serial_bufFlush
+            ;serial_int_dontFlush:
+        
+        
             call serial_alToRecvBuf
             ;lea si, serial_recvBuf
             ;add si, serial_recvCount
@@ -109,16 +121,25 @@ serial_int:
         pop ax
         pop si
         
-        ; Print.
-        ; Do not print sync.
+        
+        ; Online
+        ;call action_online
+
+        
+        ;
+        ; Do not print&save sync.
+        ;
         cmp al, 0aah
         je serial_int_print_end
         cmp al, 1
         je serial_int_print_end
+            ; Save
+            ;call serial_alToRecvBuf
+            ;inc serial_recvCount
+            ; Print
             call util_alToBuf
             lea dx, util_buf
             call game_log
-        
             ;
             ; SYNC SKIP ON NOT SYNC BYTE
             ;
@@ -435,3 +456,12 @@ serial_recvBufToAl proc
     
     ret
 serial_recvBufToAl endp
+
+
+serial_bufFlush proc
+    lea si, serial_buf		
+    mov serial_bufCount, 1
+    mov serial_bufPtr, si
+    
+    ret
+serial_bufFlush endp

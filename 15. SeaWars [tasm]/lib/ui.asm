@@ -41,46 +41,37 @@ ui_render proc
     ret
 ui_render endp
 
+
+; Draw crashed cell & missed strikes.
+
 ui_attacks proc
-	mov ax, ui_border_offsetYX
-	mov bl, ui_border_sizeX
-	mov bh, ui_border_sizeY
-	add bx, ax
-	add bx, 40
-	
+    xor bx, bx
+    
 	; ATTACK
 	
 	lea si, ship_attack
 	mov cx, 100
 	ui_attacks_attacks:
-	push bx
 		mov dx, [si]
 		cmp dx, 0
-		je ui_attacks_attacks_next
-			add dx, bx
-			
+		je ui_attacks_attacks_end
 			mov ah, 2   ; set pos
-			xor bx, bx
 			int 10h
 			mov ah, 0ah   ; draw
 			mov al, 6
 			mov cx, 1
 			int 10h
-    ui_attacks_attacks_next:
-    pop bx
 	loop ui_attacks_attacks
+    ui_attacks_attacks_end:
 	
 	; MISS
 	
 	lea si, ship_miss
 	mov cx, 100
 	ui_attacks_miss:
-	push bx
 		mov dx, [si]
 		cmp dx, 0
-		je ui_attacks_miss_next
-			add dx, bx
-			
+		je ui_attacks_miss_end
 			mov ah, 2   ; set pos
 			xor bx, bx
 			int 10h
@@ -88,9 +79,8 @@ ui_attacks proc
 			mov al, 4
 			mov cx, 1
 			int 10h
-    ui_attacks_miss_next:
-    pop bx
 	loop ui_attacks_miss
+    ui_attacks_miss_end:
 	
 	
 	ret

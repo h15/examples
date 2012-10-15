@@ -24,9 +24,11 @@ video_font: ; Change font for nice pseudographic.
                 db 0ffh
     
     cells       db 8 dup(01111110b)
-    miss        db 3 dup(1)
+    miss        db 2 dup(1)
                 db 00010001b
-                db 3 dup(1)
+                db 00111001b
+                db 00010001b
+                db 2 dup(1)
                 db 0ffh
     ship        db 8 dup(0ffh)
     crude_ship  dw 4 dup(0101010110101010b)

@@ -14,14 +14,14 @@
 
 
 action_status   db 0 ; 0 - send, 1 - get
-action_isOnline db 0
+action_isOnline db 0 ; At least one sync comes.
 action_message  db 'Another user connected!$'
 
-action_masterReady  db 0
-action_slaveReady   db 0
+action_masterReady  db 0 ; All ships afloats.
+action_slaveReady   db 0 ; All ships afloats.
 
-action_fight        db 0 ; does it my round?
-action_attack_cell  dw 0
+action_fight        db 0 ; Does it my round?
+action_attack_cell  dw 0 ; Which cell I attacked?
 
 action_sync_skip    db 0
 
@@ -88,29 +88,24 @@ action_sendMessage proc
         ret
 action_sendMessage endp
 
-action_getMessage proc
-    dec action_status
-    ;lea si, serial_recvBuf
-    mov cx, serial_recvCount
-    cmp cx, 0
-    jne action_getMessage_skip
-        jmp action_getMessage_exit
-    action_getMessage_skip:
-    
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;
-    ;; Online
-    ;;
+
+; Waiting for opponent.
+;
+
+action_online proc
+    push ax
+    push bx
+    push dx
     
     mov bl, action_isOnline
     cmp bl, 0
-    jne action_getMessage_getCmd
+    jne action_online_exit
         mov action_isOnline, 1
         lea dx, action_message
         call game_log
         
         cmp serial_type, 0
-        je action_getMessage_slave
+        je action_online_slave
             lea dx, game_message_fieldSize
             call game_message
             
@@ -123,19 +118,40 @@ action_getMessage proc
             call serial_alToBuf
             call serial_send
             
-            jmp action_getMessage_slave_end
-        action_getMessage_slave:
+            jmp action_online_slave_end
+        
+        action_online_slave:
             lea dx, game_message_waitGameParams
             call game_message
-        action_getMessage_slave_end:
+        
+        action_online_slave_end:
         
         mov game_stage, 0F1h
+    
+    action_online_exit:
+        pop dx
+        pop bx
+        pop ax
+    
+        ret
+action_online endp
+
+
+action_getMessage proc
+    dec action_status
+    
+    mov cx, serial_recvCount
+    cmp cx, 0
+    jne action_getMessage_skip
+        jmp action_getMessage_exit
+    action_getMessage_skip:
+    
+    ; Online
+    call action_online
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     action_getMessage_getCmd:
         call serial_recvBufToAl
-    ;    mov al, [si] ; get command
-    ;    inc si
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;
@@ -243,11 +259,31 @@ action_getMessage proc
         jmp action_getMessage_exit
     action_getMessage_14:
     
+    
+        push dx
+        push ax
+        mov ax, 0ededh
+        call util_alToBuf
+        lea dx, util_buf
+        call game_log
+        pop ax
+        pop dx
+        
+    
+        push dx
+        push ax
+        call util_alToBuf
+        lea dx, util_buf
+        call game_log
+        pop ax
+        pop dx
+        
     cmp al, 0C0h
     jne action_getMessage_5
         call action_attack
         jmp action_getMessage_exit
     action_getMessage_5:
+    
     cmp al, 0Ch
     jne action_getMessage_6
         call action_miss
@@ -489,20 +525,36 @@ action_checkSelf endp
 
 
 ; We are under attack!
+
 action_attack proc
     call serial_recvBufToAl
     mov dl, al
     call serial_recvBufToAl
     mov dh, al
     
+    push dx
+    mov ax, dx
+    call util_alToBuf
+    lea dx, util_buf
+    call game_log
+    pop dx
+    
 	mov ax, ui_border_offsetYX
 	mov bl, ui_border_sizeX
 	mov bh, ui_border_sizeY
 	add bx, ax
-	add bx, 40
     
     sub bx, 0101h
     add dx, bx
+    
+    
+    push dx
+    mov ax, dx
+    call util_alToBuf
+    lea dx, util_buf
+    call game_log
+    pop dx
+    
     
     lea si, ship_self
     mov cx, 100
@@ -579,22 +631,22 @@ action_miss proc
     mov action_fight, 0
     mov dx, action_attack_cell
     
-    mov ax, ui_border_offsetYX
-    mov bl, ui_border_sizeX
-    mov bh, ui_border_sizeY
-    add bx, ax
-    add bx, 40
-    sub bx, 0101h
-    
-    add dx, bx
-    
-    mov ah, 2   ; set pos
-    xor bx, bx
-    int 10h
-    mov ah, 0ah   ; draw
-    mov al, 4
-    mov cx, 1
-    int 10h
+    lea si, ship_miss
+    action_miss_loop:
+        mov ax, [si]
+        
+        cmp ax, 0 ; Free cell.
+        je action_miss_loop_save
+        ; Next step.
+            add si, 2
+            jmp action_miss_loop_next
+        action_miss_loop_save:
+        ; Save cell.
+            mov [si], dx
+            jmp action_miss_loop_end
+    action_miss_loop_next:
+    jmp action_miss_loop
+    action_miss_loop_end:
     
     ret
 action_miss endp

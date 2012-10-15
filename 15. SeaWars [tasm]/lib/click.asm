@@ -417,6 +417,10 @@ click_route_changeName endp
 
 
 click_route_enemyField proc
+    ; Lock
+    mov action_fight, 0
+    
+    ; Get YX without field offset.
 	mov ax, ui_border_offsetYX
 	mov bl, ui_border_sizeX
 	mov bh, ui_border_sizeY
@@ -425,9 +429,19 @@ click_route_enemyField proc
 	
 	mov action_attack_cell, dx
 	
-	sub bx, 0101h
+	sub bx, 0707h
 	sub dx, bx ; get "local" X,Y
 	
+        ; Log
+        mov ax, dx
+        call util_alToBuf
+        lea dx, util_buf
+        call game_log
+    
+    ; AGRH
+    ;call serial_bufFlush
+    
+    ; Send
 	mov al, 0C0h
 	call serial_alToBuf
 	mov al, dl
