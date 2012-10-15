@@ -65,6 +65,9 @@ game_message_hit				db 'Hit!$'
 game_message_kill				db 'Dead!$'
 game_message_miss				db 'Miss!$'
 
+game_message_win                db 'You win! Congratulations! Press ESC to exit...$'
+game_message_loose              db 'You loose! Press ESC to exit...$'
+
 game_log_line db 13h
 
 ; Main Loop.
@@ -100,12 +103,20 @@ game_mainloop proc
             ;call com_action_sendSync
         game_mainloop_second_skip:
         
+        ; ALL TIME recv
+        call action_getMessage
+        
         ; Exit if ESC pressed.
         ;
         call kbd_shiftKey
         cmp al, 1
         jne game_LOOP
     game_exit:
+        call serial_bufFlush
+        mov al, 0a7h
+        call serial_alToBuf
+        call serial_send
+        
         ret
 game_mainloop endp
 
@@ -283,3 +294,17 @@ game_stage1 proc
     
 	ret
 game_stage1 endp
+
+
+; @param al 0->loose; 1->win
+game_endOfGame proc
+    cmp al, 1
+    jne game_endOfGame_notWin
+        lea dx, game_message_win
+        call game_message
+        ret
+    game_endOfGame_notWin:
+        lea dx, game_message_loose
+        call game_message
+        ret
+game_endOfGame endp

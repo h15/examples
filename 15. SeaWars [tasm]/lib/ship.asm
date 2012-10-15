@@ -13,6 +13,9 @@
 
 
 ; Data
+ship_self_cells     db 0
+ship_enemy_cells    db 0
+
 ship_self_counts:
     ship_self_4_count   db 22
     ship_self_3_count   db 22
@@ -159,6 +162,16 @@ ship_movTmpToArray proc
     
     xor cx, cx
     mov cl, game_tmp_shipSize
+    
+    ;
+    ; Cell Count++
+    ;
+    push ax
+        mov al, ship_self_cells
+        add al, cl
+        mov ship_self_cells, al
+        mov ship_enemy_cells, al
+    pop ax
     
     ; Ship -> array ship_self
     ship_movTmpToArray_loop:

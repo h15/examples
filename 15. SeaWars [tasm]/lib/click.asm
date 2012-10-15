@@ -92,8 +92,8 @@ click_route proc
         jg click_route_not_enemy
         cmp game_stage, 0F4h
         jne click_route_not_enemy
-        cmp action_fight, 1
-        jne click_route_not_enemy
+        ;cmp action_fight, 1
+        ;jne click_route_not_enemy
         
         ; ACTION
         call click_route_enemyField
@@ -420,6 +420,33 @@ click_route_enemyField proc
     ; Lock
     mov action_fight, 0
     
+        push dx
+        push ax
+            mov ax, 0ededh
+            call util_alToBuf
+            lea dx, util_buf
+            call game_log
+        pop ax
+        pop dx
+        
+        push dx
+        push ax
+            mov ax, 0ededh
+            call util_alToBuf
+            lea dx, util_buf
+            call game_log
+        pop ax
+        pop dx
+        
+        push dx
+        push ax
+            mov ax, 0ededh
+            call util_alToBuf
+            lea dx, util_buf
+            call game_log
+        pop ax
+        pop dx
+    
     ; Get YX without field offset.
 	mov ax, ui_border_offsetYX
 	mov bl, ui_border_sizeX
@@ -429,7 +456,7 @@ click_route_enemyField proc
 	
 	mov action_attack_cell, dx
 	
-	sub bx, 0707h
+	sub bx, 0a0ah
 	sub dx, bx ; get "local" X,Y
 	
         ; Log

@@ -62,9 +62,9 @@ action_sendMessage proc
         jg action_sendMessage_sync_exit ; -> if bufCount = 0
         
             ; SKIP SYNC on demand.
-            mov al, action_sync_skip
-            cmp al, 0
-            jne action_sendMessage_sync_dec
+            ;mov al, action_sync_skip
+            ;cmp al, 0
+            ;jne action_sendMessage_sync_dec
             
                 
                 ; Buffer is empty.
@@ -80,9 +80,9 @@ action_sendMessage proc
                     call serial_alToBuf
                     call serial_send
                     ret
-            action_sendMessage_sync_dec:
-                dec al
-                mov action_sync_skip, al
+            ;action_sendMessage_sync_dec:
+            ;    dec al
+            ;    mov action_sync_skip, al
                 
     action_sendMessage_sync_exit:
         ret
@@ -152,6 +152,11 @@ action_getMessage proc
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     action_getMessage_getCmd:
         call serial_recvBufToAl
+    
+    cmp al, 00
+    jne action_getMessage_00
+        jmp action_getMessage_exit
+    action_getMessage_00:
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;
@@ -280,6 +285,13 @@ action_getMessage proc
         
     cmp al, 0C0h
     jne action_getMessage_5
+        lea dx, game_message_miss
+        call game_log
+        lea dx, game_message_miss
+        call game_log
+        lea dx, game_message_miss
+        call game_log
+        
         call action_attack
         jmp action_getMessage_exit
     action_getMessage_5:
@@ -314,9 +326,18 @@ action_getMessage proc
         jmp action_getMessage_exit
     action_getMessage_8:
     
+    cmp al, 3Ch
+    jne action_getMessage_81
+        call action_miss
+        
+        lea dx, game_message_kill
+        call game_log
+        
+        jmp action_getMessage_exit
+    action_getMessage_81:
     
     action_getMessage_exit:
-        mov serial_recvCount, 0
+       ; mov serial_recvCount, 0
         ret
 action_getMessage endp
 
@@ -605,23 +626,37 @@ action_attack endp
 
 
 action_hit proc
+    mov action_fight, 1
     mov dx, action_attack_cell
-    mov ax, ui_border_offsetYX
-    mov bl, ui_border_sizeX
-    mov bh, ui_border_sizeY
-    add bx, ax
-    add bx, 40
-    sub bx, 0101h
     
-    add dx, bx
+    push ax
+        mov al, ship_enemy_cells
+        dec al
+        mov ship_enemy_cells, al
+        
+        cmp al, 0
+        jne action_hit_doesnotLast
+            mov al, 1
+            call game_endOfGame
+        action_hit_doesnotLast:
+    pop ax
     
-    mov ah, 2   ; set pos
-    xor bx, bx
-    int 10h
-    mov ah, 0ah   ; draw
-    mov al, 6
-    mov cx, 1
-    int 10h
+    lea si, ship_attack
+    action_hit_loop:
+        mov ax, [si]
+        
+        cmp ax, 0 ; Free cell.
+        je action_hit_loop_save
+        ; Next step.
+            add si, 2
+            jmp action_hit_loop_next
+        action_hit_loop_save:
+        ; Save cell.
+            mov [si], dx
+            jmp action_hit_loop_end
+    action_hit_loop_next:
+    jmp action_hit_loop
+    action_hit_loop_end:
     
     ret
 action_hit endp

@@ -131,8 +131,8 @@ serial_int:
         ;
         cmp al, 0aah
         je serial_int_print_end
-        cmp al, 1
-        je serial_int_print_end
+        ;cmp al, 1
+        ;je serial_int_print_end
             ; Save
             ;call serial_alToRecvBuf
             ;inc serial_recvCount
@@ -143,7 +143,7 @@ serial_int:
             ;
             ; SYNC SKIP ON NOT SYNC BYTE
             ;
-            mov action_sync_skip, 4
+            ;mov action_sync_skip, 4
         serial_int_print_end:
         
         
@@ -156,6 +156,7 @@ serial_int:
             mov al, 0a2h
             call serial_alToBuf
             call serial_send
+            jmp serial_onFly_end
         serial_int_2bh:
         
         cmp al, 0a4h
@@ -167,6 +168,7 @@ serial_int:
             mov al, 04ah
             call serial_alToBuf
             call serial_send
+            jmp serial_onFly_end
         serial_int_0a4h:
         
         cmp al, 0a1h
@@ -174,14 +176,37 @@ serial_int:
             mov al, 01ah
             call serial_alToBuf
             call serial_send
+            jmp serial_onFly_end
         serial_int_0a1h:
         
-        cmp al, 0aah
+        ;cmp al, 0aah
+        ;jne serial_int_0aah
+        ;    mov al, 01h
+        ;    call serial_alToBuf
+        ;    call serial_send
+        ;    jmp serial_onFly_end
+        ;serial_int_0aah:
+        
+        mov ah, action_isOnline
+        cmp ah, 1
         jne serial_int_0aah
-            mov al, 01h
-            call serial_alToBuf
-            call serial_send
+        
+            ;cmp al, 1
+            ;jne serial_int_001h
+            ;    call serial_recvBufToAl
+            ;    jmp serial_onFly_end
+            ;serial_int_001h:
+            
+            cmp al, 0aah
+            jne serial_int_0aah
+                ;call serial_recvBufToAl
+                mov al, 1
+                call serial_alToBuf
+                call serial_send
+                jmp serial_onFly_end
         serial_int_0aah:
+        
+        serial_onFly_end:
         pop ax
         
         
@@ -437,6 +462,17 @@ serial_alToRecvBuf endp
 serial_recvBufToAl proc
     push si
     
+    mov si, serial_recvStart
+    mov di, serial_recvEnd
+    
+    cmp si, di ; buf is empty
+    jne serial_recvBufToAl_bufDoesntEmpty
+        mov al, 0
+        jmp serial_recvBufToAl_exit
+    serial_recvBufToAl_bufDoesntEmpty:
+        pop si ; restore si
+        push si
+    
     cmp serial_recvStart, 1024
     jne serial_RecvBufToAl_toNull
         mov serial_recvStart, 0
@@ -451,10 +487,11 @@ serial_recvBufToAl proc
         inc ax
         mov serial_recvStart, ax
     pop ax
-    
-    pop si
-    
-    ret
+
+    serial_recvBufToAl_exit:
+        pop si
+        
+        ret
 serial_recvBufToAl endp
 
 
