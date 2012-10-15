@@ -131,8 +131,8 @@ serial_int:
         ;
         cmp al, 0aah
         je serial_int_print_end
-        ;cmp al, 1
-        ;je serial_int_print_end
+        cmp al, 1
+        je serial_int_print_end
             ; Save
             ;call serial_alToRecvBuf
             ;inc serial_recvCount

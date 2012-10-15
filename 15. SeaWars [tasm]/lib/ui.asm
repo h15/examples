@@ -52,6 +52,7 @@ ui_attacks proc
 	lea si, ship_attack
 	mov cx, 100
 	ui_attacks_attacks:
+	push cx
 		mov dx, [si]
 		cmp dx, 0
 		je ui_attacks_attacks_end
@@ -61,27 +62,82 @@ ui_attacks proc
 			mov al, 6
 			mov cx, 1
 			int 10h
+	pop cx
 	loop ui_attacks_attacks
+	jmp ui_attacks_attacks_end1
     ui_attacks_attacks_end:
+    pop cx
+    ui_attacks_attacks_end1:
 	
 	; MISS
 	
 	lea si, ship_miss
 	mov cx, 100
 	ui_attacks_miss:
+	push cx
 		mov dx, [si]
 		cmp dx, 0
 		je ui_attacks_miss_end
 			mov ah, 2   ; set pos
-			xor bx, bx
 			int 10h
 			mov ah, 0ah   ; draw
 			mov al, 4
 			mov cx, 1
 			int 10h
+	pop cx
 	loop ui_attacks_miss
+	jmp ui_attacks_miss_end1
     ui_attacks_miss_end:
+    pop cx
+    ui_attacks_miss_end1:
 	
+	;
+	;	THE SAME FOR ME.
+	;
+	    
+	; ATTACK
+	
+	lea si, ship_selfAttack
+	mov cx, 100
+	ui_attacks_attacks1:
+	push cx
+		mov dx, [si]
+		cmp dx, 0
+		je ui_attacks_attacks1_end
+			mov ah, 2   ; set pos
+			int 10h
+			mov ah, 0ah   ; draw
+			mov al, 6
+			mov cx, 1
+			int 10h
+	pop cx
+	loop ui_attacks_attacks1
+	jmp ui_attacks_attacks1_end1
+    ui_attacks_attacks1_end:
+    pop cx
+    ui_attacks_attacks1_end1:
+	
+	; MISS
+	
+	lea si, ship_selfMiss
+	mov cx, 100
+	ui_attacks_miss1:
+	push cx
+		mov dx, [si]
+		cmp dx, 0
+		je ui_attacks_miss1_end
+			mov ah, 2   ; set pos
+			int 10h
+			mov ah, 0ah   ; draw
+			mov al, 4
+			mov cx, 1
+			int 10h
+	pop cx
+	loop ui_attacks_miss1
+	jmp ui_attacks_miss1_end1
+    ui_attacks_miss1_end:
+    pop cx
+    ui_attacks_miss1_end1:
 	
 	ret
 ui_attacks endp

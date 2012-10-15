@@ -329,7 +329,6 @@ action_getMessage proc
     cmp al, 3Ch
     jne action_getMessage_81
         call action_miss
-        
         lea dx, game_message_kill
         call game_log
         
@@ -553,19 +552,18 @@ action_attack proc
     call serial_recvBufToAl
     mov dh, al
     
+    
     push dx
     mov ax, dx
     call util_alToBuf
     lea dx, util_buf
     call game_log
+    
+    lea dx, game_log_line
+    call game_log
     pop dx
     
-	mov ax, ui_border_offsetYX
-	mov bl, ui_border_sizeX
-	mov bh, ui_border_sizeY
-	add bx, ax
-    
-    sub bx, 0101h
+	mov bx, ui_border_offsetYX
     add dx, bx
     
     
@@ -588,6 +586,27 @@ action_attack proc
     
     jmp action_attack_exit
     action_attack_gotcha:
+        ; Save attack for rendering.
+        lea si, ship_selfAttack
+        
+        mov cx, 100
+        action_attack_hit:
+        push cx
+            
+            mov bx, [si]
+            cmp bx, 0
+            jne action_attack_hit_next
+            
+                mov [si], dx
+                jmp action_attack_hit_end
+            
+        action_attack_hit_next:
+        add si, 2
+        pop cx
+        loop action_attack_hit
+        action_attack_hit_end:
+        
+        ; HIT or KILL
         mov bx, 0
         mov [si], bx
         mov ax, cx
@@ -603,18 +622,42 @@ action_attack proc
             jne action_attack_gotcha_notDead
             add si, 2
         loop action_attack_gotcha_loop
+            ; Send 'dead'
             mov al, 2Ch
             call serial_alToBuf
             call serial_send
             
             ret
         action_attack_gotcha_notDead:
+            ; Send 'hit'
             mov al, 1Ch
             call serial_alToBuf
             call serial_send
         
             ret
     action_attack_exit:
+        ; Save strike
+        lea si, ship_selfMiss
+        
+        mov cx, 100
+        action_attack_miss:
+        push cx
+            
+            mov bx, [si]
+            cmp bx, 0
+            jne action_attack_miss_next
+            
+                mov [si], dx
+                jmp action_attack_miss_end
+            
+        action_attack_miss_next:
+        add si, 2
+        pop cx
+        loop action_attack_miss
+        action_attack_miss_end:
+        
+        
+        ; Send 'miss'
         mov al, 0Ch
         call serial_alToBuf
         call serial_send
@@ -663,6 +706,36 @@ action_hit endp
 
 
 action_miss proc
+
+        
+    
+        push dx
+        push ax
+            mov ax, 0beefh
+            call util_alToBuf
+            lea dx, util_buf
+            call game_log
+        pop ax
+        pop dx
+        
+        push dx
+        push ax
+            mov ax, 0beefh
+            call util_alToBuf
+            lea dx, util_buf
+            call game_log
+        pop ax
+        pop dx
+        
+        push dx
+        push ax
+            mov ax, 0beefh
+            call util_alToBuf
+            lea dx, util_buf
+            call game_log
+        pop ax
+        pop dx
+    
     mov action_fight, 0
     mov dx, action_attack_cell
     

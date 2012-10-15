@@ -112,10 +112,10 @@ game_mainloop proc
         cmp al, 1
         jne game_LOOP
     game_exit:
-        call serial_bufFlush
-        mov al, 0a7h
-        call serial_alToBuf
-        call serial_send
+        ;call serial_bufFlush
+        ;mov al, 0a6h
+        ;call serial_alToBuf
+        ;call serial_send
         
         ret
 game_mainloop endp

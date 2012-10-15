@@ -420,50 +420,21 @@ click_route_enemyField proc
     ; Lock
     mov action_fight, 0
     
-        push dx
-        push ax
-            mov ax, 0ededh
-            call util_alToBuf
-            lea dx, util_buf
-            call game_log
-        pop ax
-        pop dx
-        
-        push dx
-        push ax
-            mov ax, 0ededh
-            call util_alToBuf
-            lea dx, util_buf
-            call game_log
-        pop ax
-        pop dx
-        
-        push dx
-        push ax
-            mov ax, 0ededh
-            call util_alToBuf
-            lea dx, util_buf
-            call game_log
-        pop ax
-        pop dx
-    
     ; Get YX without field offset.
-	mov ax, ui_border_offsetYX
-	mov bl, ui_border_sizeX
-	mov bh, ui_border_sizeY
-	add bx, ax
+	mov bx, ui_border_offsetYX
 	add bx, 40
 	
 	mov action_attack_cell, dx
 	
-	sub bx, 0a0ah
-	sub dx, bx ; get "local" X,Y
+	sub dx, bx ; get "local" Y, X
 	
-        ; Log
-        mov ax, dx
-        call util_alToBuf
-        lea dx, util_buf
-        call game_log
+		push dx
+			; Log
+			mov ax, dx
+			call util_alToBuf
+			lea dx, util_buf
+			call game_log
+        pop dx
     
     ; AGRH
     ;call serial_bufFlush

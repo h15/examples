@@ -47,6 +47,9 @@ ship_enemy      dd 100 dup(0) ; 50 ships
 ship_attack 	dw 100 dup(0) ; YX
 ship_miss 		dw 100 dup(0) ; YX
 
+ship_selfAttack 	dw 100 dup(0) ; YX
+ship_selfMiss 		dw 100 dup(0) ; YX
+
 ; Check field's cell for free.
 ; @param dx - YX
 ; @return ax
