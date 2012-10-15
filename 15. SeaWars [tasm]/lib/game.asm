@@ -300,6 +300,12 @@ game_stage1 endp
 game_endOfGame proc
     cmp al, 1
     jne game_endOfGame_notWin
+		mov al, 0a9h  ; Send "win"
+		call serial_alToBuf
+		call serial_send
+		
+		mov game_stage, 0F9h
+		
         lea dx, game_message_win
         call game_message
         ret

@@ -335,6 +335,18 @@ action_getMessage proc
         jmp action_getMessage_exit
     action_getMessage_81:
     
+    cmp al, 0A9h
+    jne action_getMessage_0A9h
+        mov al, 9ah
+        call serial_alToBuf
+        call serial_send
+        
+        mov al, 0
+        call game_endOfGame
+        
+        jmp action_getMessage_exit
+    action_getMessage_0A9h:
+    
     action_getMessage_exit:
        ; mov serial_recvCount, 0
         ret
@@ -547,9 +559,19 @@ action_checkSelf endp
 ; We are under attack!
 
 action_attack proc
-    call serial_recvBufToAl
+
+    action_attack_getch1:
+        call serial_recvBufToAl
+        cmp al, 0
+    je action_attack_getch1
+    
     mov dl, al
-    call serial_recvBufToAl
+    
+    action_attack_getch2:
+        call serial_recvBufToAl
+        cmp al, 0
+    je action_attack_getch2
+    
     mov dh, al
     
     
@@ -559,7 +581,7 @@ action_attack proc
     lea dx, util_buf
     call game_log
     
-    lea dx, game_log_line
+    lea dx, game_message_fight
     call game_log
     pop dx
     
@@ -574,7 +596,9 @@ action_attack proc
     call game_log
     pop dx
     
-    
+    ;
+    ;   FIND ATTACKED CELL
+    ;
     lea si, ship_self
     mov cx, 100
     action_attack_loop:
@@ -587,45 +611,79 @@ action_attack proc
     jmp action_attack_exit
     action_attack_gotcha:
         ; Save attack for rendering.
-        lea si, ship_selfAttack
-        
-        mov cx, 100
-        action_attack_hit:
         push cx
+        push si
+            lea si, ship_selfAttack
             
-            mov bx, [si]
-            cmp bx, 0
-            jne action_attack_hit_next
-            
-                mov [si], dx
-                jmp action_attack_hit_end
-            
-        action_attack_hit_next:
-        add si, 2
+            mov cx, 100
+            action_attack_hit:
+            push cx
+                
+                mov bx, [si]
+                cmp bx, 0
+                jne action_attack_hit_next
+                
+                    mov [si], dx
+                    jmp action_attack_hit_end
+                
+            action_attack_hit_next:
+            add si, 2
+            pop cx
+            loop action_attack_hit
+            jmp action_attack_hit_end1
+            action_attack_hit_end:
+            pop cx
+            action_attack_hit_end1:
+        pop si
         pop cx
-        loop action_attack_hit
-        action_attack_hit_end:
         
-        ; HIT or KILL
+        
+        ; Mark attacked cell as empty field (broken).
         mov bx, 0
         mov [si], bx
-        mov ax, cx
-        and ax, 11
-        add ax, ax
         
-        add si, ax
+        push si
+        push ax
+            lea ax, ship_self
+            sub si, ax
+            shr si, 3 ; <- Ship number!
+            mov cx, si
+        pop ax
+        pop si
         
-        mov cx, 4
-        action_attack_gotcha_loop:
-            mov ax, [si]
-            cmp ax, 0
-            jne action_attack_gotcha_notDead
-            add si, 2
-        loop action_attack_gotcha_loop
+        ; HIT or KILL
+        lea si, ship_self_alive ; dec living-cells' count
+        add si, cx
+        mov al, [si]
+        dec al
+        mov [si], al
+        mov ah, cl
+        
+        ; DEBUG
+        push ax
+		mov ax, 0
+		call util_alToBuf
+		lea dx, util_buf
+		call game_log
+        
+        mov ah, cl
+        call util_alToBuf
+        lea dx, util_buf
+        call game_log
+        pop ax
+        ;
+        cmp al, 0
+        je action_attack_gotcha_dead
+        jmp action_attack_gotcha_notDead
+        
+        action_attack_gotcha_dead:
             ; Send 'dead'
             mov al, 2Ch
             call serial_alToBuf
             call serial_send
+            
+            lea dx, game_message_win
+            call game_log
             
             ret
         action_attack_gotcha_notDead:
@@ -654,7 +712,10 @@ action_attack proc
         add si, 2
         pop cx
         loop action_attack_miss
+        jmp action_attack_miss_end1
         action_attack_miss_end:
+        pop cx
+        action_attack_miss_end1:
         
         
         ; Send 'miss'

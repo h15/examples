@@ -41,8 +41,10 @@ ship_enemy_counts:
 ;   mov dx, ax ; <- get first cell
 
 ship_self_count db 0
-ship_self       dd 100 dup(0) ; 50 ships
-ship_enemy      dd 100 dup(0) ; 50 ships
+
+ship_self_alive	db 100 dup(0) ; how much cells are living
+ship_self       dd 200 dup(0) ; 50 ships
+ship_enemy      dd 200 dup(0) ; 50 ships
 
 ship_attack 	dw 100 dup(0) ; YX
 ship_miss 		dw 100 dup(0) ; YX
@@ -160,7 +162,7 @@ ship_movTmpToArray proc
     
     xor cx, cx
     mov cl, ship_self_count
-    shl cx, 4
+    shl cx, 3
     add di, cx
     
     xor cx, cx
@@ -194,6 +196,32 @@ ship_movTmpToArray proc
         mov [si], ax
     pop si
     pop ax
+    
+    ; Save size.
+    xor bx, bx
+    mov bl, ship_self_count
+    lea si, ship_self_alive
+    add si, bx
+    mov bl, game_tmp_shipSize
+    mov [si], bl
+    
+    
+    ; DEBUG
+    push ax
+		mov ax, 0
+		call util_alToBuf
+		lea dx, util_buf
+		call game_log
+		
+		mov al, bl
+		mov bl, ship_self_count
+		mov ah, bl
+		
+		call util_alToBuf
+		lea dx, util_buf
+		call game_log
+    pop ax
+    
     
     ; ship_self_count++
     mov bl, ship_self_count

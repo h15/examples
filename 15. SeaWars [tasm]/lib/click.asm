@@ -92,8 +92,8 @@ click_route proc
         jg click_route_not_enemy
         cmp game_stage, 0F4h
         jne click_route_not_enemy
-        ;cmp action_fight, 1
-        ;jne click_route_not_enemy
+        cmp action_fight, 1
+        jne click_route_not_enemy
         
         ; ACTION
         call click_route_enemyField
