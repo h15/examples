@@ -139,7 +139,7 @@ serial_int:
             ; Print
             call util_alToBuf
             lea dx, util_buf
-            call game_log
+            call game_debug
             ;
             ; SYNC SKIP ON NOT SYNC BYTE
             ;

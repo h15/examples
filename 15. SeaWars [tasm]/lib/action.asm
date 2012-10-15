@@ -192,7 +192,7 @@ action_getMessage proc
         mov ax, 0efefh
         call util_alToBuf
         lea dx, util_buf
-        call game_log
+        call game_debug
         
         jmp action_getMessage_exit
     action_getMessage_2:
@@ -202,7 +202,7 @@ action_getMessage proc
         mov ax, 0eeeeh
         call util_alToBuf
         lea dx, util_buf
-        call game_log
+        call game_debug
         
         mov al, 0a2h
         call serial_alToBuf ; SEND SEND SEND A2!!!!!
@@ -270,7 +270,7 @@ action_getMessage proc
         mov ax, 0ededh
         call util_alToBuf
         lea dx, util_buf
-        call game_log
+        call game_debug
         pop ax
         pop dx
         
@@ -279,19 +279,12 @@ action_getMessage proc
         push ax
         call util_alToBuf
         lea dx, util_buf
-        call game_log
+        call game_debug
         pop ax
         pop dx
         
     cmp al, 0C0h
     jne action_getMessage_5
-        lea dx, game_message_miss
-        call game_log
-        lea dx, game_message_miss
-        call game_log
-        lea dx, game_message_miss
-        call game_log
-        
         call action_attack
         jmp action_getMessage_exit
     action_getMessage_5:
@@ -300,7 +293,7 @@ action_getMessage proc
     jne action_getMessage_6
         call action_miss
         
-        lea dx, game_message_miss
+        lea dx, game_message_IMiss
         call game_log
         
         jmp action_getMessage_exit
@@ -310,7 +303,7 @@ action_getMessage proc
     jne action_getMessage_7
         call action_hit
         
-        lea dx, game_message_hit
+        lea dx, game_message_IHit
         call game_log
         
         jmp action_getMessage_exit
@@ -320,7 +313,7 @@ action_getMessage proc
     jne action_getMessage_8
         call action_hit
         
-        lea dx, game_message_kill
+        lea dx, game_message_IKill
         call game_log
         
         jmp action_getMessage_exit
@@ -560,6 +553,7 @@ action_checkSelf endp
 
 action_attack proc
 
+    ; Get cell XY
     action_attack_getch1:
         call serial_recvBufToAl
         cmp al, 0
@@ -574,26 +568,15 @@ action_attack proc
     
     mov dh, al
     
-    
-    push dx
-    mov ax, dx
-    call util_alToBuf
-    lea dx, util_buf
-    call game_log
-    
-    lea dx, game_message_fight
-    call game_log
-    pop dx
-    
 	mov bx, ui_border_offsetYX
     add dx, bx
     
-    
+    ; DEBUG
     push dx
     mov ax, dx
     call util_alToBuf
     lea dx, util_buf
-    call game_log
+    call game_debug
     pop dx
     
     ;
@@ -664,12 +647,12 @@ action_attack proc
 		mov ax, 0
 		call util_alToBuf
 		lea dx, util_buf
-		call game_log
+		call game_debug
         
         mov ah, cl
         call util_alToBuf
         lea dx, util_buf
-        call game_log
+        call game_debug
         pop ax
         ;
         cmp al, 0
@@ -682,7 +665,7 @@ action_attack proc
             call serial_alToBuf
             call serial_send
             
-            lea dx, game_message_win
+            lea dx, game_message_ImDead
             call game_log
             
             ret
@@ -691,6 +674,9 @@ action_attack proc
             mov al, 1Ch
             call serial_alToBuf
             call serial_send
+            
+            lea dx, game_message_IHurt
+            call game_log
         
             ret
     action_attack_exit:
@@ -722,6 +708,9 @@ action_attack proc
         mov al, 0Ch
         call serial_alToBuf
         call serial_send
+        
+        lea dx, game_message_ImOk
+        call game_log
         
         mov action_fight, 1
         
@@ -767,36 +756,6 @@ action_hit endp
 
 
 action_miss proc
-
-        
-    
-        push dx
-        push ax
-            mov ax, 0beefh
-            call util_alToBuf
-            lea dx, util_buf
-            call game_log
-        pop ax
-        pop dx
-        
-        push dx
-        push ax
-            mov ax, 0beefh
-            call util_alToBuf
-            lea dx, util_buf
-            call game_log
-        pop ax
-        pop dx
-        
-        push dx
-        push ax
-            mov ax, 0beefh
-            call util_alToBuf
-            lea dx, util_buf
-            call game_log
-        pop ax
-        pop dx
-    
     mov action_fight, 0
     mov dx, action_attack_cell
     

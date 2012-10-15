@@ -68,6 +68,13 @@ game_message_miss				db 'Miss!$'
 game_message_win                db 'You win! Congratulations! Press ESC to exit...$'
 game_message_loose              db 'You loose! Press ESC to exit...$'
 
+game_message_ImDead             db ' T_T  Your ship was sunked! RIP$'
+game_message_IKill              db '=^_^= Enemy`s ship was sunked! Good job!$'
+game_message_IHit               db ' ^_^  Gotcha! Bomb striked enemy`s ship!$'
+game_message_IMiss              db ' -_-  Ah?$'
+game_message_IHurt              db ' o_0  Ouch! Your ship was sunked.$'
+game_message_ImOk               db ' *_*  Some bomb exploded near...$'
+
 game_log_line db 13h
 
 ; Main Loop.
@@ -188,7 +195,7 @@ game_log proc
     
     mov game_log_line, al
     
-    mov dl, 28h  ; pos
+    mov dl, 0   ; pos
     mov dh, game_log_line
     xor bh, bh  ; video mode
     mov ah, 2   ; set pos func
@@ -214,6 +221,15 @@ game_log proc
     pop bx
     ret
 game_log endp
+
+
+game_debug proc
+    cmp DEBUG, 1
+    jne game_debug_exit
+        call game_log
+    game_debug_exit:
+        ret
+game_debug endp
 
 
 ; Enter game params:

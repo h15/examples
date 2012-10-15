@@ -211,7 +211,7 @@ ship_movTmpToArray proc
 		mov ax, 0
 		call util_alToBuf
 		lea dx, util_buf
-		call game_log
+		call game_debug
 		
 		mov al, bl
 		mov bl, ship_self_count
@@ -219,7 +219,7 @@ ship_movTmpToArray proc
 		
 		call util_alToBuf
 		lea dx, util_buf
-		call game_log
+		call game_debug
     pop ax
     
     

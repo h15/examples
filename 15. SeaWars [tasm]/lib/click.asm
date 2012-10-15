@@ -433,7 +433,7 @@ click_route_enemyField proc
 			mov ax, dx
 			call util_alToBuf
 			lea dx, util_buf
-			call game_log
+			call game_debug
         pop dx
     
     ; AGRH
