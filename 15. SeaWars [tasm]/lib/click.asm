@@ -315,9 +315,9 @@ click_route_changeName proc
 	
 	; Clean up
 	click_route_changeName_loop:
-		mov dl, 20h
-		mov ah, 2
-		int 21h
+		;mov dl, 20h
+		;mov ah, 2
+		;int 21h
 		
 		inc si
 	loop click_route_changeName_loop

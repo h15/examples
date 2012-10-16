@@ -20,11 +20,11 @@ ui_border_sizeY     db 2
 ; (2nd field will draw with 40 cols offset)
 ui_border_offsetYX  dw 0108h
 
-ui_user_selfName_len  db 6
-ui_user_selfName_str  db 'NoName          '
+ui_user_selfName_len  db 2
+ui_user_selfName_str  db 'No              '
 
-ui_user_enemyName_len db 6
-ui_user_enemyName_str db 'NoName          '
+ui_user_enemyName_len db 2
+ui_user_enemyName_str db 'No              '
 
 
 ; Draw user interface.

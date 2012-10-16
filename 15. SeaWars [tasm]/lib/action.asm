@@ -189,20 +189,20 @@ action_getMessage proc
     jne action_getMessage_2
         call action_recvGameParams
         
-        mov ax, 0efefh
-        call util_alToBuf
-        lea dx, util_buf
-        call game_debug
+        ;mov ax, 0efefh
+        ;call util_alToBuf
+        ;lea dx, util_buf
+        ;call game_debug
         
         jmp action_getMessage_exit
     action_getMessage_2:
     
     cmp al, 2bh ; Ok(game params) from enemy
     jne action_getMessage10
-        mov ax, 0eeeeh
-        call util_alToBuf
-        lea dx, util_buf
-        call game_debug
+        ;mov ax, 0eeeeh
+        ;call util_alToBuf
+        ;lea dx, util_buf
+        ;call game_debug
         
         mov al, 0a2h
         call serial_alToBuf ; SEND SEND SEND A2!!!!!
@@ -265,23 +265,23 @@ action_getMessage proc
     action_getMessage_14:
     
     
-        push dx
-        push ax
-        mov ax, 0ededh
-        call util_alToBuf
-        lea dx, util_buf
-        call game_debug
-        pop ax
-        pop dx
+        ;push dx
+        ;push ax
+        ;mov ax, 0ededh
+        ;call util_alToBuf
+        ;lea dx, util_buf
+        ;call game_debug
+        ;pop ax
+        ;pop dx
         
     
-        push dx
-        push ax
-        call util_alToBuf
-        lea dx, util_buf
-        call game_debug
-        pop ax
-        pop dx
+        ;push dx
+        ;push ax
+        ;call util_alToBuf
+        ;lea dx, util_buf
+        ;call game_debug
+        ;pop ax
+        ;pop dx
         
     cmp al, 0C0h
     jne action_getMessage_5
@@ -369,8 +369,15 @@ action_syncPong endp
 
 
 action_changeEnemysName proc
-    call serial_recvBufToAl
-    mov cl, al
+    lea dx, game_message_win
+    call game_log
+    
+    ; Getch
+    action_changeEnemysName_getSize:
+        call serial_recvBufToAl
+        mov cl, al
+        cmp al, 0
+    je action_changeEnemysName_getSize
     
     cmp cl, 0
     je action_changeEnemysName_exit
@@ -387,11 +394,11 @@ action_changeEnemysName proc
         int 10h
         
         action_changeEnemysName_loop:
-            mov dl, 20h
-            mov ah, 2
-            int 21h
+            ;mov dl, 20h
+            ;mov ah, 2
+            ;int 21h
             
-            inc di
+            ;inc di
         loop action_changeEnemysName_loop
     pop cx
     pop si
@@ -401,7 +408,12 @@ action_changeEnemysName proc
     lea di, ui_user_enemyName_str
     
     action_changeEnemysName_loop1:
-        call serial_recvBufToAl
+        ; Get char
+        action_changeEnemysName_loop1_getch:
+            call serial_recvBufToAl
+            cmp al, 0
+        je action_changeEnemysName_loop1_getch
+        
         mov [di], al
         inc di
     loop action_changeEnemysName_loop1
@@ -454,27 +466,57 @@ action_recvGameParams proc
     mov al, 02bh
     call serial_alToBuf
     
-    call serial_recvBufToAl
+    ;
+    ;
+    action_recvGameParams_getch1:
+        call serial_recvBufToAl
+        cmp al, 0
+    je action_recvGameParams_getch1
+    
     call serial_alToBuf
     mov ui_border_sizeX, al
     mov ui_border_sizeY, al
     
-    call serial_recvBufToAl
+    ;
+    ;
+    action_recvGameParams_getch2:
+        call serial_recvBufToAl
+        cmp al, 0
+    je action_recvGameParams_getch2
+    
     call serial_alToBuf
     and al, 1111b
     mov ship_self_4_count, al
     
-    call serial_recvBufToAl
+    ;
+    ;
+    action_recvGameParams_getch3:
+        call serial_recvBufToAl
+        cmp al, 0
+    je action_recvGameParams_getch3
+    
     call serial_alToBuf
     and al, 1111b
     mov ship_self_3_count, al
     
-    call serial_recvBufToAl
+    ;
+    ;
+    action_recvGameParams_getch4:
+        call serial_recvBufToAl
+        cmp al, 0
+    je action_recvGameParams_getch4
+    
     call serial_alToBuf
     and al, 1111b
     mov ship_self_2_count, al
     
-    call serial_recvBufToAl
+    ;
+    ;
+    action_recvGameParams_getch5:
+        call serial_recvBufToAl
+        cmp al, 0
+    je action_recvGameParams_getch5
+    
     call serial_alToBuf
     and al, 1111b
     mov ship_self_1_count, al
