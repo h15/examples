@@ -171,6 +171,32 @@ serial_int:
             jmp serial_onFly_end
         serial_int_0a4h:
         
+        
+        cmp al, 0a2h
+        jne serial_int_0a2h
+            lea dx, game_message_ImOk
+            call game_debug
+        
+            mov al, 02ah
+            call serial_alToBuf  ; SEND SEND SEND 2Ah
+            call serial_alToBuf
+            call serial_alToBuf
+            call serial_alToBuf
+            call serial_alToBuf
+            call serial_send
+            jmp serial_onFly_end
+        serial_int_0a2h:
+        
+        cmp al, 0a3h
+        jne serial_int_0a3h
+            mov action_masterReady, 1
+            
+            mov al, 03ah
+            call serial_alToBuf
+            call serial_send
+            jmp serial_onFly_end
+        serial_int_0a3h:
+        
         cmp al, 0a1h
         jne serial_int_0a1h
             mov al, 01ah
@@ -334,6 +360,9 @@ serial_send proc
                     add	bx, serial_bufSize
                 serial_send_output_ok:
                 
+                ;
+                ; SEND BYTE
+                ;
                 mov	al, [bx]
                 mov dx, 2f8h   ; pегистp данных
                 jmp short $+2

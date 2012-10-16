@@ -22,7 +22,7 @@
 main:
     jmp main_1
         
-        DEBUG db 1
+        DEBUG db 0
     
     ; Preload libs.
     

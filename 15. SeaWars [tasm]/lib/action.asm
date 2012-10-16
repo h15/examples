@@ -166,6 +166,10 @@ action_getMessage proc
     
     cmp al, 0aah ; ping
     jne action_getMessage11
+        mov al, 1   ; AGRH
+        call serial_alToBuf
+        call serial_send
+        
         jmp action_getMessage_exit
     action_getMessage11:
     
@@ -182,6 +186,13 @@ action_getMessage proc
     
     cmp al, 01bh ; name changed (who cares?)
     jne action_getMessage_13
+        mov al, 02ah
+        call serial_alToBuf ; SEND SEND SEND 2Ah
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_alToBuf
+        call serial_send
+        
         jmp action_getMessage_exit
     action_getMessage_13:
     
@@ -394,11 +405,11 @@ action_changeEnemysName proc
         int 10h
         
         action_changeEnemysName_loop:
-            ;mov dl, 20h
-            ;mov ah, 2
-            ;int 21h
+            mov dl, 20h
+            mov ah, 2
+            int 21h
             
-            ;inc di
+            inc di
         loop action_changeEnemysName_loop
     pop cx
     pop si
@@ -767,18 +778,6 @@ action_hit proc
     mov action_fight, 1
     mov dx, action_attack_cell
     
-    push ax
-        mov al, ship_enemy_cells
-        dec al
-        mov ship_enemy_cells, al
-        
-        cmp al, 0
-        jne action_hit_doesnotLast
-            mov al, 1
-            call game_endOfGame
-        action_hit_doesnotLast:
-    pop ax
-    
     lea si, ship_attack
     action_hit_loop:
         mov ax, [si]
@@ -795,6 +794,22 @@ action_hit proc
     action_hit_loop_next:
     jmp action_hit_loop
     action_hit_loop_end:
+    
+    ;
+    ; Win?
+    ;
+    push ax
+        mov al, ship_enemy_cells
+        dec al
+        mov ship_enemy_cells, al
+        
+        cmp al, 0
+        jne action_hit_doesnotLast
+            mov al, 1
+            call game_endOfGame
+        action_hit_doesnotLast:
+    pop ax
+    
     
     ret
 action_hit endp
