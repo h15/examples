@@ -75,6 +75,11 @@ game_message_IMiss              db ' -_-  Ah?$'
 game_message_IHurt              db ' o_0  Ouch! Your ship was sunked.$'
 game_message_ImOk               db ' *_*  Some bomb exploded near...$'
 
+game_message_wrongInput         db ' !!!  Incirrect input. Try again.$'
+game_message_waitEnemy          db ' Done! Wait enemy to start.$'
+
+game_fight_started    db 0
+
 game_log_line db 13h
 
 ; Main Loop.
@@ -129,6 +134,9 @@ game_mainloop endp
 
 
 game_checkState proc
+    cmp game_fight_started, 0
+    jne game_checkState_exit
+    
 	mov al, game_stage
 	cmp al, 30h
 	jg game_checkState_exit
@@ -141,6 +149,7 @@ game_checkState proc
 				mov game_stage, 0F4h
 				lea dx, game_message_fight
 				call game_message
+                mov game_fight_started, 1
 		
 	game_checkState_exit:
 		ret
@@ -153,6 +162,8 @@ game_checkState endp
 game_message proc
     push bx
     push ax
+    
+    call game_log
     
     push dx
     xor dx, dx  ; pos
@@ -213,10 +224,26 @@ game_log proc
     int 10h
     pop dx
     
+    push dx
+    
     ; write message
     mov ah, 9
     int 21h
     
+    ; Write empty string after.
+    mov dl, 28h  ; pos
+    mov dh, game_log_line
+    inc dh
+    xor bh, bh  ; video mode
+    mov ah, 2   ; set pos func
+    int 10h
+    
+    ; Empty string.
+    lea dx, game_message_longEmptyString40
+    mov ah, 9
+    int 21h
+    
+    pop dx
     pop ax
     pop bx
     ret
@@ -243,9 +270,14 @@ game_debug endp
 game_stage1 proc
 	; Does key pressed ?
 	cmp al, 2
-	jl game_stage1_exit
+    jge game_stage1_1
+        jmp game_stage1_exit
+    game_stage1_1:
+    
 	cmp al, 0bh
-	jg game_stage1_exit
+    jle game_stage1_2
+        jmp game_stage1_exit
+    game_stage1_2:
 		
 		; Get input
 		
@@ -259,9 +291,25 @@ game_stage1 proc
 		game_stage1_zero_end:
 		
 		; set vars
+        
+        ;
+        ;   Field
+        ;
 		cmp ui_border_sizeX, 6
 		jge game_stage1_notField
 			inc al
+            
+            ;
+            ; 5 < Field size < 11
+            ;
+            cmp al, 6
+            jge game_stage1_fieldOk
+                lea dx, game_message_wrongInput
+                call game_log
+                jmp game_stage1_exit
+            game_stage1_fieldOk:
+            
+            ; Ok - save field size.
 			mov ui_border_sizeX, al
 			mov ui_border_sizeY, al
 			dec al
@@ -272,32 +320,99 @@ game_stage1 proc
 			jmp game_stage1_exit
 		game_stage1_notField:
 		
+        ;
+        ;   Count of 4-cells ships
+        ;
 		cmp ship_self_4_count, 22
 		jne game_stage1_not4
+        
+            ;
+            ; Count of 4-cells < 2
+            ;
+            cmp al, 2
+            jl game_stage1_4ok
+                lea dx, game_message_wrongInput
+                call game_log
+                jmp game_stage1_exit
+            game_stage1_4ok:
+            
+            ; 4-cells - OK!
 			mov ship_self_4_count, al
 			lea dx, game_message_ship3
             call game_message
 			jmp game_stage1_exit
 		game_stage1_not4:
 		
+        ;
+        ;   Count of 3-cells ships
+        ;
 		cmp ship_self_3_count, 22
 		jne game_stage1_not3
+        
+            ;
+            ; Count of 3-cells < 3
+            ;
+            cmp al, 3
+            jl game_stage1_3ok
+                lea dx, game_message_wrongInput
+                call game_log
+                jmp game_stage1_exit
+            game_stage1_3ok:
+            
+            ; 3-cells - OK!
 			mov ship_self_3_count, al
 			lea dx, game_message_ship2
             call game_message
 			jmp game_stage1_exit
 		game_stage1_not3:
 		
+        ;
+        ;   Count of 2-cells ships
+        ;
 		cmp ship_self_2_count, 22
 		jne game_stage1_not2
+        
+            ;
+            ; Count of 2-cells < 6
+            ;
+            cmp al, 6
+            jl game_stage1_2ok
+                lea dx, game_message_wrongInput
+                call game_log
+                jmp game_stage1_exit
+            game_stage1_2ok:
+            
+            ; 2-cells - OK!
 			mov ship_self_2_count, al
 			lea dx, game_message_ship1
             call game_message
 			jmp game_stage1_exit
 		game_stage1_not2:
-		
+        
+		;
+        ;   Count of 1-cells ships
+        ;
 		cmp ship_self_1_count, 22
 		jne game_stage1_not1
+        
+            ;
+            ; Count of 0 < 1-cells < 11
+            ;
+            cmp al, 0
+            jg game_stage1_1ok1
+                lea dx, game_message_wrongInput
+                call game_log
+                jmp game_stage1_exit
+            game_stage1_1ok1:
+            
+            cmp al, 11
+            jl game_stage1_1ok
+                lea dx, game_message_wrongInput
+                call game_log
+                jmp game_stage1_exit
+            game_stage1_1ok:
+            
+            ; 1-cells - OK!
 			mov ship_self_1_count, al
 			
 			call action_sendGameParams
@@ -323,10 +438,12 @@ game_endOfGame proc
 		mov game_stage, 0F9h
 		
         lea dx, game_message_win
+        ;call game_log
         call game_message
         ret
     game_endOfGame_notWin:
         lea dx, game_message_loose
+        ;call game_log
         call game_message
         ret
 game_endOfGame endp

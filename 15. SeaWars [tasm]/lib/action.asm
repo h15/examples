@@ -525,7 +525,10 @@ action_shipsAfloats proc
         call serial_alToBuf
         call serial_alToBuf
         call serial_send
-        
+    
+        lea dx, game_message_waitEnemy
+        call game_message
+    
         ret
 action_shipsAfloats endp
 

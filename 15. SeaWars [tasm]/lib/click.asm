@@ -81,6 +81,7 @@ click_route proc
         mov bh, ui_border_sizeY
         add bx, ax
         add bx, 40
+        add ax, 40
         
         cmp dl, al  ; left
         jle click_route_not_enemy
